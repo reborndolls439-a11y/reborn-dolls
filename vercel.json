@@ -1,0 +1,10 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build --workspace=@reborn/web",
+  "installCommand": "npm install",
+  "outputDirectory": "apps/web/.next",
+  "devCommand": "npm run dev --workspace=@reborn/web",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/$1" }
+  ]
+}
