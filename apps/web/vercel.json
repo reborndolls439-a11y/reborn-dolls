@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd ../.. && npm run build --workspace=@reborn/web",
+  "installCommand": "cd ../.. && npm install",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
+}

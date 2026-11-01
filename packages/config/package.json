@@ -1,0 +1,10 @@
+{
+  "name": "@reborn/config",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./tailwind.config.ts",
+  "devDependencies": {
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3"
+  }
+}
