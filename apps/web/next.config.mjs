@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    // Type checking is done separately via tsc. Skip the redundant Next.js check.
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   transpilePackages: ["@reborn/ui", "@reborn/db", "@reborn/types"],
   images: {
     remotePatterns: [
