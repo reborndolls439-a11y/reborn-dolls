@@ -1,12 +1,9 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@reborn/db";
-import type { Prisma } from "@reborn/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Package, Heart, MessageCircle, ArrowRight } from "lucide-react";
-
-type RecentOrder = Prisma.OrderGetPayload<{ include: { items: true } }>;
-import { parseDecimal, formatDate, getOrderStatusLabel, getOrderStatusColor } from "@/lib/utils";
+import { parseDecimal, formatDate, getOrderStatusLabel } from "@/lib/utils";
 import { Badge } from "@reborn/ui";
 
 export default async function AccountOverviewPage() {
@@ -18,6 +15,8 @@ export default async function AccountOverviewPage() {
     prisma.wishlistItem.count({ where: { userId: user.id } }),
     prisma.order.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 3, include: { items: true } }),
   ]);
+
+  type RecentOrder = (typeof recentOrders)[number];
 
   const statusVariantMap: Record<string, "success" | "warning" | "info" | "error" | "default"> = {
     PENDING: "warning", PAYMENT_CONFIRMED: "info", PROCESSING: "info",

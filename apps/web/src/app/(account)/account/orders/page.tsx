@@ -1,11 +1,8 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@reborn/db";
-import type { Prisma } from "@reborn/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Package } from "lucide-react";
-
-type OrderWithItems = Prisma.OrderGetPayload<{ include: { items: { take: 1 }; shippingAddress: true } }>;
 import { Badge, EmptyState } from "@reborn/ui";
 import { formatDate, formatPrice, parseDecimal, getOrderStatusLabel } from "@/lib/utils";
 
@@ -18,6 +15,8 @@ export default async function OrdersPage() {
     orderBy: { createdAt: "desc" },
     include: { items: { take: 1 }, shippingAddress: true },
   });
+
+  type Order = (typeof orders)[number];
 
   const statusVariantMap: Record<string, "success" | "warning" | "info" | "error" | "default"> = {
     PENDING: "warning", PAYMENT_CONFIRMED: "info", PROCESSING: "info",
@@ -33,7 +32,7 @@ export default async function OrdersPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {orders.map((order: OrderWithItems) => (
+          {orders.map((order: Order) => (
             <Link key={order.id} href={`/account/orders/${order.id}`} className="block bg-white rounded-2xl border border-charcoal-100 p-5 hover:border-bloom-rose-200 hover:shadow-card transition-all">
               <div className="flex items-start justify-between mb-3">
                 <div>

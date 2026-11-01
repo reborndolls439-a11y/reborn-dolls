@@ -1,11 +1,8 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@reborn/db";
-import type { Prisma } from "@reborn/db";
 import { formatPrice, formatDate, parseDecimal } from "@/lib/utils";
 import { CheckCircle2, Package, Mail } from "lucide-react";
-
-type OrderItem = Prisma.OrderItemGetPayload<Record<string, never>>;
 
 export const metadata: Metadata = { title: "Order Confirmed" };
 
@@ -27,8 +24,9 @@ export default async function OrderConfirmationPage({ params }: { params: Promis
     );
   }
 
+  type OrderItem = (typeof order.items)[number];
+
   const total = parseDecimal(order.total);
-  const customerName = order.guestName || "Customer";
   const customerEmail = order.guestEmail;
 
   return (
