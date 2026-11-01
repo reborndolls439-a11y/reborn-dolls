@@ -1,8 +1,11 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@reborn/db";
+import type { Prisma } from "@reborn/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Package, Heart, MessageCircle, ArrowRight } from "lucide-react";
+
+type RecentOrder = Prisma.OrderGetPayload<{ include: { items: true } }>;
 import { parseDecimal, formatDate, getOrderStatusLabel, getOrderStatusColor } from "@/lib/utils";
 import { Badge } from "@reborn/ui";
 
@@ -51,7 +54,7 @@ export default async function AccountOverviewPage() {
             <Link href="/account/orders" className="text-xs text-bloom-rose font-body hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></Link>
           </div>
           <div className="divide-y divide-charcoal-50">
-            {recentOrders.map((order) => (
+            {recentOrders.map((order: RecentOrder) => (
               <Link key={order.id} href={`/account/orders/${order.id}`} className="flex items-center justify-between px-5 py-4 hover:bg-charcoal-50 transition-colors">
                 <div>
                   <p className="text-sm font-semibold text-charcoal font-body">#{order.orderNumber}</p>

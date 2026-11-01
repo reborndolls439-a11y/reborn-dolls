@@ -1,11 +1,14 @@
 import React from "react";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@reborn/db";
+import type { Prisma } from "@reborn/db";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package, Truck } from "lucide-react";
 import { Badge } from "@reborn/ui";
 import { formatDate, formatPrice, parseDecimal, getOrderStatusLabel } from "@/lib/utils";
+
+type OrderItem = Prisma.OrderItemGetPayload<Record<string, never>>;
 
 const statusVariant: Record<string, "success" | "warning" | "info" | "error" | "default"> = {
   PENDING: "warning", PAYMENT_CONFIRMED: "info", PROCESSING: "info",
@@ -94,7 +97,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <Package className="w-4 h-4 text-bloom-rose" /> Items Ordered
         </h2>
         <div className="divide-y divide-charcoal-50">
-          {order.items.map((item) => (
+          {order.items.map((item: OrderItem) => (
             <div key={item.id} className="flex gap-4 px-5 py-4">
               <div className="w-14 h-14 rounded-xl overflow-hidden bg-soft-blush-100 shrink-0">
                 {item.productImage && <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover" />}

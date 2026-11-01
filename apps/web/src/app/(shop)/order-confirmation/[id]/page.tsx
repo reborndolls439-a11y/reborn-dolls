@@ -1,8 +1,11 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@reborn/db";
+import type { Prisma } from "@reborn/db";
 import { formatPrice, formatDate, parseDecimal } from "@/lib/utils";
 import { CheckCircle2, Package, Mail } from "lucide-react";
+
+type OrderItem = Prisma.OrderItemGetPayload<Record<string, never>>;
 
 export const metadata: Metadata = { title: "Order Confirmed" };
 
@@ -68,7 +71,7 @@ export default async function OrderConfirmationPage({ params }: { params: Promis
         <div className="bg-white rounded-3xl p-6 border border-charcoal-100 mb-6">
           <h2 className="font-heading text-lg font-semibold text-charcoal mb-4">Order Details</h2>
           <div className="space-y-3 mb-4">
-            {order.items.map((item) => (
+            {order.items.map((item: OrderItem) => (
               <div key={item.id} className="flex gap-3">
                 <div className="w-14 h-14 rounded-xl overflow-hidden bg-soft-blush-100 shrink-0">
                   {item.productImage && <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover" />}
