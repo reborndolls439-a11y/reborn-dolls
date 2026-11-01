@@ -1,6 +1,9 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-initialize so it doesn't throw at build time when env vars aren't set
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 const FROM_EMAIL = process.env.FROM_EMAIL || "Reborn Dolls <hello@reborndolls.com>";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@reborndolls.com";
@@ -79,7 +82,7 @@ export async function sendNewOrderEmailToAdmin(order: {
     </div>
   `;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM_EMAIL,
     to: ADMIN_EMAIL,
     subject: `New Order #${order.orderNumber} — $${order.total.toFixed(2)}`,
@@ -151,7 +154,7 @@ export async function sendOrderConfirmationToCustomer(order: {
     </div>
   `;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM_EMAIL,
     to: order.customerEmail,
     subject: `Your order #${order.orderNumber} is confirmed ✓`,
@@ -181,7 +184,7 @@ export async function sendPasswordResetEmail(
     </div>
   `;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM_EMAIL,
     to: email,
     subject: "Reset your Reborn Dolls password",
@@ -225,7 +228,7 @@ export async function sendOrderStatusUpdate(
     </div>
   `;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM_EMAIL,
     to: email,
     subject: `Order #${orderNumber} Update — ${status.replace(/_/g, " ")}`,

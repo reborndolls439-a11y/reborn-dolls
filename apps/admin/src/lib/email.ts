@@ -1,7 +1,11 @@
 // Re-export from web app's email lib pattern — standalone for admin
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-initialize so it doesn't throw at build time when env vars aren't set
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
+
 const FROM_EMAIL = process.env.FROM_EMAIL || "Reborn Dolls <hello@reborndolls.com>";
 
 export async function sendOrderStatusUpdate(email: string, name: string, orderNumber: string, status: string, trackingNumber?: string) {
@@ -14,7 +18,7 @@ export async function sendOrderStatusUpdate(email: string, name: string, orderNu
   const message = statusMessages[status] || `Your order status has been updated to: ${status}.`;
   const siteUrl = process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:3000";
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM_EMAIL,
     to: email,
     subject: `Order #${orderNumber} Update`,
