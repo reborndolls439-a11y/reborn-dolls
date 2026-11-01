@@ -45,7 +45,7 @@ export default async function ProductPage({ params }: Props) {
     status: raw.status,
     badge: raw.badge,
     tags: raw.tags,
-    averageRating: raw.reviews.length ? raw.reviews.reduce((s, r) => s + r.rating, 0) / raw.reviews.length : null,
+    averageRating: raw.reviews.length ? raw.reviews.reduce((s: number, r: (typeof raw.reviews)[number]) => s + r.rating, 0) / raw.reviews.length : null,
     reviewCount: raw.reviews.length,
   };
 
