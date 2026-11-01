@@ -48,7 +48,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     prisma.category.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" }, select: { name: true, slug: true } }),
   ]);
 
-  const mapped: ProductSummary[] = products.map((p) => ({
+  const mapped: ProductSummary[] = products.map((p: (typeof products)[number]) => ({
     id: p.id, name: p.name, slug: p.slug,
     price: parseDecimal(p.price), salePrice: p.salePrice ? parseDecimal(p.salePrice) : null,
     badge: p.badge, isFeatured: p.isFeatured, isNewArrival: p.isNewArrival,

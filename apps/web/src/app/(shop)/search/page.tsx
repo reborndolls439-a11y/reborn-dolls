@@ -44,7 +44,7 @@ export default async function SearchPage({ searchParams }: Props) {
     prisma.category.findMany({ where: { isActive: true }, select: { name: true, slug: true } }),
   ]);
 
-  const mapped: ProductSummary[] = products.map((p) => ({
+  const mapped: ProductSummary[] = products.map((p: (typeof products)[number]) => ({
     id: p.id, name: p.name, slug: p.slug, price: parseDecimal(p.price), salePrice: p.salePrice ? parseDecimal(p.salePrice) : null,
     badge: p.badge, isFeatured: p.isFeatured, isNewArrival: p.isNewArrival, stockQuantity: p.stockQuantity,
     primaryImage: p.images[0]?.url ?? null, category: p.category,

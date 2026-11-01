@@ -54,7 +54,7 @@ export default async function ProductPage({ params }: Props) {
     take: 4, orderBy: { createdAt: "desc" },
     select: { id: true, name: true, slug: true, price: true, salePrice: true, badge: true, isFeatured: true, isNewArrival: true, stockQuantity: true, images: { where: { isPrimary: true }, select: { url: true }, take: 1 }, category: { select: { name: true, slug: true } } },
   });
-  const related: ProductSummary[] = relatedRaw.map((p) => ({
+  const related: ProductSummary[] = relatedRaw.map((p: (typeof relatedRaw)[number]) => ({
     id: p.id, name: p.name, slug: p.slug, price: parseDecimal(p.price), salePrice: p.salePrice ? parseDecimal(p.salePrice) : null,
     badge: p.badge, isFeatured: p.isFeatured, isNewArrival: p.isNewArrival, stockQuantity: p.stockQuantity,
     primaryImage: p.images[0]?.url ?? null, category: p.category,
