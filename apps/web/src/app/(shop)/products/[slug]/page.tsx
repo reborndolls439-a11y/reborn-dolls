@@ -171,7 +171,7 @@ export default async function ProductPage({ params }: Props) {
                 <div>
                   <h2 className="font-heading text-xl font-semibold text-charcoal mb-6">Customer Reviews</h2>
                   <div className="space-y-6">
-                    {raw.reviews.map((review) => (
+                    {raw.reviews.map((review: (typeof raw.reviews)[number]) => (
                       <div key={review.id} className="border-b border-charcoal-50 pb-6">
                         <div className="flex items-start justify-between mb-2">
                           <div>
@@ -203,7 +203,7 @@ export default async function ProductPage({ params }: Props) {
                   <div>
                     <p className="text-sm text-taupe font-body mb-2">Tags</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {product.tags.map((tag) => (
+                      {product.tags.map((tag: string) => (
                         <span key={tag} className="text-xs bg-soft-blush-100 text-taupe px-2.5 py-1 rounded-full font-body">{tag}</span>
                       ))}
                     </div>
