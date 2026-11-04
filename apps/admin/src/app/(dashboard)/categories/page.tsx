@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Save, X, Upload, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Save, X, Upload, Image as ImageIcon, Loader2, AlertCircle } from "lucide-react";
 import { Button, Input } from "@reborn/ui";
 
 interface Category {
@@ -22,6 +22,7 @@ export default function CategoriesPage() {
   const [form, setForm] = useState({ name: "", description: "", slug: "", image: "" });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => {
@@ -38,26 +39,58 @@ export default function CategoriesPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = reader.result as string;
-        const res = await fetch("/api/admin/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ file: base64, folder: "reborn-dolls/categories" }),
-        });
-        const data = await res.json();
-        if (data.url) {
-          setForm((f) => ({ ...f, image: data.url }));
-        }
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch {
-      setUploading(false);
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Please select an image file.");
+      return;
     }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image must be under 5MB.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadError("");
+
+    try {
+      // Convert to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Upload to Cloudinary via admin API
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file: base64, folder: "reborn-dolls/categories" }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Upload failed.");
+      }
+
+      setForm((f) => ({ ...f, image: data.url }));
+      setUploadError("");
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Failed to upload image.");
+    } finally {
+      setUploading(false);
+      // Reset file input so the same file can be selected again
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const removeImage = () => {
+    setForm((f) => ({ ...f, image: "" }));
+    setUploadError("");
   };
 
   const handleSave = async () => {
@@ -71,19 +104,26 @@ export default function CategoriesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    setAdding(false); setEditing(null); setForm({ name: "", description: "", slug: "", image: "" });
-    load(); setSaving(false);
+    setAdding(false);
+    setEditing(null);
+    setForm({ name: "", description: "", slug: "", image: "" });
+    setUploadError("");
+    load();
+    setSaving(false);
   };
 
   const startEdit = (cat: Category) => {
     setEditing(cat.id);
     setForm({ name: cat.name, description: cat.description || "", slug: cat.slug, image: cat.image || "" });
     setAdding(false);
+    setUploadError("");
   };
 
   const cancelEdit = () => {
-    setEditing(null); setAdding(false);
+    setEditing(null);
+    setAdding(false);
     setForm({ name: "", description: "", slug: "", image: "" });
+    setUploadError("");
   };
 
   return (
@@ -94,7 +134,12 @@ export default function CategoriesPage() {
           size="sm"
           variant="primary"
           leftIcon={<Plus className="w-4 h-4" />}
-          onClick={() => { setAdding(true); setEditing(null); setForm({ name: "", description: "", slug: "", image: "" }); }}
+          onClick={() => {
+            setAdding(true);
+            setEditing(null);
+            setForm({ name: "", description: "", slug: "", image: "" });
+            setUploadError("");
+          }}
         >
           Add Category
         </Button>
@@ -132,13 +177,13 @@ export default function CategoriesPage() {
                 Cover Image
               </label>
 
-              {/* Preview */}
+              {/* Image preview or upload zone */}
               {form.image ? (
-                <div className="relative w-full h-40 rounded-xl overflow-hidden bg-soft-blush-100 mb-2 group">
-                  <img src={form.image} alt="Category cover" className="w-full h-full object-cover" />
+                <div className="relative w-full h-40 rounded-xl overflow-hidden bg-soft-blush-100 mb-2">
+                  <img src={form.image} alt="Category cover preview" className="w-full h-full object-cover" />
                   <button
                     type="button"
-                    onClick={() => setForm((f) => ({ ...f, image: "" }))}
+                    onClick={removeImage}
                     className="absolute top-2 right-2 w-7 h-7 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
                     aria-label="Remove image"
                   >
@@ -146,63 +191,73 @@ export default function CategoriesPage() {
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {/* File upload button */}
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    disabled={uploading}
-                    className="flex flex-col items-center justify-center gap-1.5 h-32 border-2 border-dashed border-charcoal-200 rounded-xl hover:border-bloom-rose hover:bg-bloom-rose-50/30 transition-colors text-taupe disabled:opacity-50"
-                  >
-                    {uploading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-bloom-rose border-t-transparent rounded-full animate-spin" />
-                        <span className="text-xs font-body">Uploading…</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-5 h-5" />
-                        <span className="text-xs font-body">Upload from device</span>
-                      </>
-                    )}
-                  </button>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full flex flex-col items-center justify-center gap-2 h-36 border-2 border-dashed border-charcoal-200 rounded-xl hover:border-bloom-rose hover:bg-bloom-rose-50/30 transition-colors text-taupe disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin text-bloom-rose" />
+                      <span className="text-sm font-body">Uploading…</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-bloom-rose-50 flex items-center justify-center">
+                        <Upload className="w-5 h-5 text-bloom-rose" />
+                      </div>
+                      <span className="text-sm font-body">Click to upload cover image</span>
+                      <span className="text-xs text-taupe font-body">PNG, JPG, WebP up to 5MB</span>
+                    </>
+                  )}
+                </button>
+              )}
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+
+              {/* Upload error */}
+              {uploadError && (
+                <div className="flex items-center gap-1.5 mt-1.5 text-xs text-red-600 font-body">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {uploadError}
                 </div>
               )}
 
-              {/* URL paste */}
-              <div className="flex gap-2 mt-2">
-                <input
-                  type="url"
-                  value={form.image}
-                  onChange={(e) => setForm({ ...form, image: e.target.value })}
-                  placeholder="or paste an image URL"
-                  className="flex-1 h-9 px-4 rounded-xl border border-charcoal-200 text-sm font-body focus:outline-none focus:border-bloom-rose"
-                />
-                {!form.image && (
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    disabled={uploading}
-                    className="h-9 px-4 bg-charcoal-100 text-charcoal rounded-xl text-sm font-medium hover:bg-charcoal-200 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    <Upload className="w-3.5 h-3.5" /> Browse
-                  </button>
-                )}
-              </div>
+              {/* Change image button when image exists */}
+              {form.image && (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="text-xs text-bloom-rose font-body hover:underline mt-1"
+                >
+                  Change image
+                </button>
+              )}
             </div>
 
             <div className="flex gap-2 pt-1">
-              <Button size="sm" variant="primary" leftIcon={<Save className="w-3.5 h-3.5" />} loading={saving} onClick={handleSave}>
+              <Button
+                size="sm"
+                variant="primary"
+                leftIcon={<Save className="w-3.5 h-3.5" />}
+                loading={saving}
+                onClick={handleSave}
+              >
                 Save
               </Button>
-              <Button size="sm" variant="outline" leftIcon={<X className="w-3.5 h-3.5" />} onClick={cancelEdit}>
+              <Button
+                size="sm"
+                variant="outline"
+                leftIcon={<X className="w-3.5 h-3.5" />}
+                onClick={cancelEdit}
+              >
                 Cancel
               </Button>
             </div>
@@ -211,7 +266,9 @@ export default function CategoriesPage() {
 
         {/* List */}
         <div className="bg-white rounded-2xl border border-charcoal-100 divide-y divide-charcoal-50">
-          {loading && <div className="py-10 text-center text-sm text-taupe font-body">Loading…</div>}
+          {loading && (
+            <div className="py-10 text-center text-sm text-taupe font-body">Loading…</div>
+          )}
           {!loading && categories.length === 0 && (
             <div className="py-10 text-center text-sm text-taupe font-body">No categories yet.</div>
           )}
@@ -237,6 +294,7 @@ export default function CategoriesPage() {
                 <button
                   onClick={() => startEdit(cat)}
                   className="w-8 h-8 rounded-lg border border-charcoal-200 flex items-center justify-center text-taupe hover:text-bloom-rose hover:border-bloom-rose transition-colors"
+                  aria-label="Edit category"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
