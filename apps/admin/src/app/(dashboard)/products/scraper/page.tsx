@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Scissors, Search, Download, CheckCircle2, AlertCircle, Loader2, ExternalLink } from "lucide-react";
+import { Scissors, Search, Download, CheckCircle2, AlertCircle, Loader2, ExternalLink, Package } from "lucide-react";
 import { Button, Input } from "@reborn/ui";
 
 interface ScrapedProduct {
@@ -17,11 +17,16 @@ export default function ScraperPage() {
   const [importing, setImporting] = useState(false);
   const [importStatus, setImportStatus] = useState<{ success: number; failed: number } | null>(null);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
 
   const handleScrape = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
-    setLoading(true); setError(""); setResults([]); setImportStatus(null);
+    setLoading(true);
+    setError("");
+    setInfo("");
+    setResults([]);
+    setImportStatus(null);
     try {
       const res = await fetch("/api/admin/scraper", {
         method: "POST",
@@ -29,11 +34,23 @@ export default function ScraperPage() {
         body: JSON.stringify({ url, category }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Scraping failed");
-      setResults((data.products || []).map((p: Omit<ScrapedProduct, "selected">) => ({ ...p, selected: true })));
+
+      if (!res.ok) {
+        throw new Error(data.error || "Scraping failed");
+      }
+
+      const products = (data.products || []).map((p: Omit<ScrapedProduct, "selected">) => ({ ...p, selected: true }));
+
+      if (products.length === 0) {
+        setInfo(data.message || "No products were found on this page. The site may use JavaScript rendering or non-standard markup.");
+      } else {
+        setResults(products);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Scraping failed. Check the URL and try again.");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImport = async () => {
@@ -49,7 +66,9 @@ export default function ScraperPage() {
       const data = await res.json();
       setImportStatus({ success: data.imported || 0, failed: data.failed || 0 });
       setResults([]);
-    } catch { setImportStatus({ success: 0, failed: selected.length }); }
+    } catch {
+      setImportStatus({ success: 0, failed: selected.length });
+    }
     finally { setImporting(false); }
   };
 
@@ -68,8 +87,8 @@ export default function ScraperPage() {
         <div className="bg-soft-blush-50 border border-bloom-rose-200 rounded-2xl p-4 mb-6 flex gap-3">
           <Scissors className="w-5 h-5 text-bloom-rose shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-charcoal font-body">Browserless-powered scraper</p>
-            <p className="text-sm text-taupe font-body mt-0.5">Enter the URL of any product listing page. We'll extract product names, descriptions, prices, and images, then allow you to review and import selected items.</p>
+            <p className="text-sm font-semibold text-charcoal font-body">Product Scraper</p>
+            <p className="text-sm text-taupe font-body mt-0.5">Enter the URL of any product listing page. We&apos;ll extract product names, descriptions, prices, and images, then allow you to review and import selected items.</p>
           </div>
         </div>
 
@@ -79,7 +98,7 @@ export default function ScraperPage() {
             <Input
               label="Product listing URL"
               type="url"
-              placeholder="https://example.com/category/reborn-dolls"
+              placeholder="https://www.reborns.com/index.cgi?main=pre-owned"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
@@ -108,7 +127,25 @@ export default function ScraperPage() {
         {error && (
           <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
             <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700 font-body">{error}</p>
+            <div>
+              <p className="text-sm font-semibold text-red-700 font-body">Scraping Error</p>
+              <p className="text-sm text-red-600 font-body mt-0.5">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Info (no results) */}
+        {info && !loading && (
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
+            <Package className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-charcoal font-body">No Products Found</p>
+              <p className="text-sm text-taupe font-body mt-0.5">{info}</p>
+              <p className="text-xs text-taupe font-body mt-2">
+                Try a different URL, or make sure the page has product listings visible in the HTML.
+                Some sites load products via JavaScript which may require the Browserless fallback to be configured.
+              </p>
+            </div>
           </div>
         )}
 

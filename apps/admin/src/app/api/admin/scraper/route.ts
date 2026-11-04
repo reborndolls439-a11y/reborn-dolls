@@ -68,16 +68,29 @@ export async function POST(request: NextRequest) {
     // ─── Parse products ───────────────────────────────────────────────────────
     // Try JSON-LD structured data first (most reliable), then fall back to HTML
     let products = parseJsonLd(html, url);
+    const foundJsonLd = products.length > 0;
 
     if (products.length === 0) {
       products = parseProductsFromHtml(html, url);
     }
 
     if (products.length === 0) {
+      // Build a helpful message about what happened
+      const htmlSize = html.length;
+      const hasJsonLd = html.includes("application/ld+json");
+      const hasImages = html.includes("data-src=") || html.includes("<img");
+      const fetchMethod = usedBrowserless ? "Browserless" : "direct fetch";
+
+      const debugInfo = [
+        `Fetched ${htmlSize.toLocaleString()} chars via ${fetchMethod}.`,
+        hasJsonLd ? "JSON-LD tags found but no products parsed." : "No JSON-LD tags found.",
+        hasImages ? "Images found in HTML." : "No images found in HTML.",
+      ].join(" ");
+
       return NextResponse.json({
         products: [],
         count: 0,
-        message: "No products detected on this page.",
+        message: `No products could be extracted. ${debugInfo}`,
       });
     }
 
