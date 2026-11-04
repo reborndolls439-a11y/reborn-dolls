@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const { url } = await request.json();
     if (!url) return NextResponse.json({ error: "URL is required." }, { status: 400 });
 
-    // ─── Strategy 1: Direct HTML fetch (fast, no external dependency) ────────
+    // ─── Strategy 1: Direct HTML fetch ──────────────────────────────────────
     let html = "";
     let usedBrowserless = false;
 
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           "Accept-Language": "en-US,en;q=0.9",
         },
         redirect: "follow",
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       // Direct fetch failed, continue to Browserless
     }
 
-    // ─── Strategy 2: Browserless fallback (renders JS, slower) ───────────────
+    // ─── Strategy 2: Browserless fallback ────────────────────────────────────
     if (!html) {
       const browserlessToken = process.env.BROWSERLESS_TOKEN;
       const browserlessUrl = process.env.BROWSERLESS_URL || "https://chrome.browserless.io";
@@ -43,10 +43,7 @@ export async function POST(request: NextRequest) {
         try {
           const blRes = await fetch(`${browserlessUrl}/content?token=${browserlessToken}`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Cache-Control": "no-cache",
-            },
+            headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" },
             body: JSON.stringify({ url }),
             signal: AbortSignal.timeout(30000),
           });
@@ -61,26 +58,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ─── If both failed, return error ────────────────────────────────────────
     if (!html) {
       return NextResponse.json(
-        {
-          error:
-            "Could not fetch the page. The site may block automated requests. Try a different URL.",
-        },
+        { error: "Could not fetch the page. The site may block automated requests." },
         { status: 422 }
       );
     }
 
-    // ─── Parse the HTML for products ─────────────────────────────────────────
-    const products = parseProductsFromHtml(html, url);
+    // ─── Parse products ───────────────────────────────────────────────────────
+    // Try JSON-LD structured data first (most reliable), then fall back to HTML
+    let products = parseJsonLd(html, url);
+
+    if (products.length === 0) {
+      products = parseProductsFromHtml(html, url);
+    }
 
     if (products.length === 0) {
       return NextResponse.json({
         products: [],
         count: 0,
-        message:
-          "No products detected. The page may use non-standard markup or require manual URL entry.",
+        message: "No products detected on this page.",
       });
     }
 
@@ -98,6 +95,108 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// ─── JSON-LD parser (structured data embedded in <script> tags) ──────────────
+function parseJsonLd(html: string, sourceUrl: string) {
+  const products: {
+    title: string;
+    description: string;
+    price: string;
+    images: string[];
+    sourceUrl: string;
+    selected: boolean;
+  }[] = [];
+
+  // Match all <script type="application/ld+json"> blocks
+  const jsonLdRegex = /<script\s+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+
+  while ((match = jsonLdRegex.exec(html)) !== null) {
+    try {
+      const raw = match[1].trim();
+      const data = JSON.parse(raw);
+
+      // Handle IndividualProduct or Product types
+      const product = data["@type"] === "IndividualProduct" || data["@type"] === "Product" ? data : null;
+      if (!product) continue;
+
+      const title = product.name || "Imported Product";
+      const image = product.image || "";
+      const description = product.description || "";
+      const offers = product.offers || {};
+      const price = offers.price ? `${offers.price} ${offers.priceCurrency || ""}`.trim() : "";
+      const productUrl = offers.url || sourceUrl;
+      const seller = offers.seller?.name || "";
+      const condition = offers.itemCondition?.replace("https://schema.org/", "") || "";
+
+      // Build description with extra details
+      let fullDesc = description;
+      if (seller) fullDesc += ` — Sold by ${seller}`;
+      if (condition) fullDesc += ` (${condition})`;
+
+      products.push({
+        title,
+        description: fullDesc || `A beautifully crafted collectible — ${title}.`,
+        price,
+        images: image ? [image] : [],
+        sourceUrl: productUrl,
+        selected: true,
+      });
+
+      if (products.length >= 20) break;
+    } catch {
+      // Skip malformed JSON
+      continue;
+    }
+  }
+
+  // Also collect extra images from the product's image carousel
+  // (JSON-LD only has the primary image, but the page may have more)
+  if (products.length > 0) {
+    const allImages = extractImages(html, sourceUrl);
+    for (const product of products) {
+      if (product.images.length === 1 && allImages.length > 1) {
+        // Find images that share a similar path prefix (same product folder)
+        const baseUser = product.images[0].match(/user\/(\d+)\//)?.[1];
+        if (baseUser) {
+          const related = allImages.filter((img) => img.includes(`user/${baseUser}/`) && img !== product.images[0]);
+          product.images = [product.images[0], ...related.slice(0, 4)];
+        }
+      }
+    }
+  }
+
+  return products;
+}
+
+// ─── Extract image URLs (handles both src and data-src for lazy loading) ──────
+function extractImages(html: string, sourceUrl: string): string[] {
+  const images: string[] = [];
+
+  // Match both src="..." and data-src="..." attributes
+  const imgRegex = /<(?:img|source)[^>]+(?:src|data-src)=["']([^"']+)["']/gi;
+  let match;
+
+  while ((match = imgRegex.exec(html)) !== null) {
+    let imgSrc = match[1];
+
+    // Skip loader/placeholder images
+    if (imgSrc.includes("loader.gif") || imgSrc.includes("loader.") || imgSrc === "") continue;
+
+    if (imgSrc.startsWith("//")) imgSrc = "https:" + imgSrc;
+    else if (imgSrc.startsWith("/")) imgSrc = new URL(imgSrc, sourceUrl).href;
+    else if (!imgSrc.startsWith("http")) continue;
+
+    // Filter out icons, logos, sprites
+    const skip = ["icon", "logo", "sprite", "avatar", "banner", "favicon", "loader", "placeholder", "shield", "background"];
+    if (skip.some((s) => imgSrc.toLowerCase().includes(s))) continue;
+
+    if (!images.includes(imgSrc)) images.push(imgSrc);
+  }
+
+  return images;
+}
+
+// ─── HTML fallback parser ─────────────────────────────────────────────────────
 function parseProductsFromHtml(html: string, sourceUrl: string) {
   const products: {
     title: string;
@@ -108,50 +207,21 @@ function parseProductsFromHtml(html: string, sourceUrl: string) {
     selected: boolean;
   }[] = [];
 
-  // ─── Extract all image URLs ────────────────────────────────────────────────
-  const imgRegex =
-    /<img[^>]+src=["']([^"']+)["'][^>]*(?:alt=["']([^"']*)["'])?[^>]*>/gi;
-  const allImages: { url: string; alt: string }[] = [];
-  let imgMatch;
-  while ((imgMatch = imgRegex.exec(html)) !== null) {
-    let imgSrc = imgMatch[1];
-    if (imgSrc.startsWith("//")) imgSrc = "https:" + imgSrc;
-    else if (imgSrc.startsWith("/")) imgSrc = new URL(imgSrc, sourceUrl).href;
-    else if (!imgSrc.startsWith("http")) continue;
+  const allImages = extractImages(html, sourceUrl);
 
-    // Filter out icons, logos, sprites, avatars, banners
-    const alt = imgMatch[2] || "";
-    const skipPatterns = ["icon", "logo", "sprite", "avatar", "banner", "favicon", "loader", "placeholder"];
-    const isSkip = skipPatterns.some((p) => imgSrc.toLowerCase().includes(p));
-
-    const isImageType =
-      imgSrc.endsWith(".jpg") ||
-      imgSrc.endsWith(".jpeg") ||
-      imgSrc.endsWith(".png") ||
-      imgSrc.endsWith(".webp") ||
-      imgSrc.endsWith(".avif") ||
-      imgSrc.includes("cloudinary") ||
-      imgSrc.includes("shopify") ||
-      imgSrc.includes("cdn") ||
-      imgSrc.includes("amazonaws") ||
-      imgSrc.includes("_next/image");
-
-    if (!isSkip && isImageType && (imgSrc.includes("product") || imgSrc.includes("doll") || alt.length > 3)) {
-      allImages.push({ url: imgSrc, alt });
-    }
-  }
-
-  // ─── Extract product links ────────────────────────────────────────────────
+  // Extract product links (handles /item/ patterns and generic product/doll/item links)
   const linkRegex = /<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
   const productLinks: { url: string; text: string }[] = [];
   let linkMatch;
+
   while ((linkMatch = linkRegex.exec(html)) !== null) {
     const href = linkMatch[1];
     const text = linkMatch[2].replace(/<[^>]*>/g, "").trim();
+
     if (
-      text.length > 5 &&
+      text.length > 2 &&
       text.length < 200 &&
-      (href.includes("product") || href.includes("doll") || href.includes("item") || href.includes("p/"))
+      (href.includes("/item/") || href.includes("product") || href.includes("doll") || href.includes("item"))
     ) {
       const fullUrl = href.startsWith("http") ? href : new URL(href, sourceUrl).href;
       if (!productLinks.find((p) => p.url === fullUrl)) {
@@ -160,73 +230,63 @@ function parseProductsFromHtml(html: string, sourceUrl: string) {
     }
   }
 
-  // ─── Extract prices ────────────────────────────────────────────────────────
-  const priceRegex =
-    /(?:class=["'][^"']*(?:price|Price|amount|cost)[^"']*["'][^>]*>|itemprop=["']price["'][^>]*content=["']([^"']+)["'][^>]*>|\$[\d,]+(?:\.\d{2})?|£[\d,]+(?:\.\d{2})?)/g;
+  // Extract prices (handles $, £, and other currency patterns)
+  const priceRegex = /(?:class=["'][^"']*(?:price|Price|amount|cost)[^"']*["'][^>]*>|\$[\d,]+(?:\.\d{2})?|£[\d,]+(?:\.\d{2})?|[\d,]+(?:\.\d{2})?\s*(?:USD|XAF|EUR|GBP))/g;
   const prices: string[] = [];
   let priceMatch;
   while ((priceMatch = priceRegex.exec(html)) !== null) {
-    const p = priceMatch[1] || priceMatch[0].replace(/<[^>]*>/g, "").trim();
-    const cleanPrice = p.match(/[$£]?[\d,]+(?:\.\d{2})?/);
+    const p = priceMatch[0].replace(/<[^>]*>/g, "").trim();
+    const cleanPrice = p.match(/[$£]?[\d,]+(?:\.\d{2})?|[\d,]+\s*(?:USD|XAF|EUR|GBP)/);
     if (cleanPrice && !prices.includes(cleanPrice[0])) {
       prices.push(cleanPrice[0]);
     }
   }
 
-  // ─── Build product objects ─────────────────────────────────────────────────
-  // Strategy 1: Use product links with associated images
+  // Build products from links
   if (productLinks.length > 0) {
-    const maxProducts = Math.min(productLinks.length, 20);
-    for (let i = 0; i < maxProducts; i++) {
-      const link = productLinks[i];
+    const seen = new Set<string>();
+    for (const link of productLinks) {
       const title = link.text.replace(/\s+/g, " ").trim();
-      if (title.length < 3) continue;
+      if (title.length < 3 || seen.has(title)) continue;
+      seen.add(title);
 
-      const productImages = allImages
-        .slice(i * 2, i * 2 + 3)
-        .map((img) => img.url)
-        .filter((u, idx, arr) => arr.indexOf(u) === idx);
+      // Find related images by user folder pattern (e.g., user/9470/)
+      const userFolder = link.url.match(/item\/(\d+)/)?.[1];
+      const productImages = userFolder
+        ? allImages.filter((img) => img.includes(userFolder))
+        : allImages.slice(0, 3);
 
       products.push({
         title,
         description: `A beautifully crafted collectible — ${title}.`,
-        price: prices[i] || prices[0] || "",
-        images: productImages.length > 0 ? productImages : allImages.slice(0, 3).map((img) => img.url),
+        price: prices[0] || "",
+        images: productImages.length > 0 ? productImages.slice(0, 5) : allImages.slice(0, 3),
         sourceUrl: link.url,
         selected: true,
       });
+
+      if (products.length >= 20) break;
     }
   }
 
-  // Strategy 2: Use image alt texts as product names
+  // Fallback: use image alt texts
   if (products.length === 0 && allImages.length > 0) {
     const seen = new Set<string>();
     for (const img of allImages) {
-      const title = img.alt.trim();
+      const altMatch = html.match(new RegExp(`data-src=["']${img.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]*alt=["']([^"']*)["']`));
+      const title = altMatch?.[1]?.trim() || "";
       if (title.length < 5 || seen.has(title)) continue;
       seen.add(title);
       products.push({
         title,
         description: `A beautifully crafted collectible — ${title}.`,
         price: "",
-        images: [img.url],
+        images: [img],
         sourceUrl,
         selected: true,
       });
       if (products.length >= 20) break;
     }
-  }
-
-  // Strategy 3: Fallback — single product from whatever we found
-  if (products.length === 0 && allImages.length > 0) {
-    products.push({
-      title: "Imported Product",
-      description: "Imported from external source.",
-      price: prices[0] || "",
-      images: allImages.slice(0, 3).map((img) => img.url),
-      sourceUrl,
-      selected: true,
-    });
   }
 
   return products;
