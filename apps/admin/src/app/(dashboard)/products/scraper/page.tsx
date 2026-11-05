@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Scissors, Search, Download, CheckCircle2, AlertCircle, Loader2, ExternalLink, Package } from "lucide-react";
 import { Button, Input } from "@reborn/ui";
 
@@ -9,15 +9,37 @@ interface ScrapedProduct {
   materials?: string; dimensions?: string; sourceUrl: string; selected: boolean;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export default function ScraperPage() {
   const [url, setUrl] = useState("");
-  const [category, setCategory] = useState("reborn-dolls");
+  const [categorySlug, setCategorySlug] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<ScrapedProduct[]>([]);
   const [importing, setImporting] = useState(false);
+  const [results, setResults] = useState<ScrapedProduct[]>([]);
   const [importStatus, setImportStatus] = useState<{ success: number; failed: number } | null>(null);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+
+  // Fetch categories from the admin API
+  useEffect(() => {
+    fetch("/api/admin/categories")
+      .then((r) => r.json())
+      .then((d) => {
+        const cats = d.categories || [];
+        setCategories(cats.filter((c: Category) => c.isActive));
+        // Auto-select the first category
+        if (cats.length > 0 && !categorySlug) {
+          setCategorySlug(cats[0].slug);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleScrape = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,18 +53,16 @@ export default function ScraperPage() {
       const res = await fetch("/api/admin/scraper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, category }),
+        body: JSON.stringify({ url }),
       });
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || "Scraping failed");
-      }
+      if (!res.ok) throw new Error(data.error || "Scraping failed");
 
       const products = (data.products || []).map((p: Omit<ScrapedProduct, "selected">) => ({ ...p, selected: true }));
 
       if (products.length === 0) {
-        setInfo(data.message || "No products were found on this page. The site may use JavaScript rendering or non-standard markup.");
+        setInfo(data.message || "No products were found on this page.");
       } else {
         setResults(products);
       }
@@ -61,15 +81,16 @@ export default function ScraperPage() {
       const res = await fetch("/api/admin/scraper/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ products: selected, category }),
+        body: JSON.stringify({ products: selected, category: categorySlug }),
       });
       const data = await res.json();
       setImportStatus({ success: data.imported || 0, failed: data.failed || 0 });
       setResults([]);
     } catch {
       setImportStatus({ success: 0, failed: selected.length });
+    } finally {
+      setImporting(false);
     }
-    finally { setImporting(false); }
   };
 
   const toggleSelect = (i: number) => setResults((r) => r.map((p, idx) => idx === i ? { ...p, selected: !p.selected } : p));
@@ -106,16 +127,20 @@ export default function ScraperPage() {
               required
             />
             <div>
-              <label className="block text-sm font-medium text-charcoal font-body mb-1.5">Assign to Category</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)}
-                className="h-11 px-4 rounded-xl border border-charcoal-200 text-sm font-body focus:outline-none focus:border-bloom-rose w-full bg-white">
-                <option value="reborn-dolls">Reborn Dolls</option>
-                <option value="silicone-dolls">Silicone Dolls</option>
-                <option value="cuddle-babies">Cuddle Babies</option>
-                <option value="doll-clothing">Doll Clothing</option>
-                <option value="accessories">Accessories</option>
-                <option value="limited-edition">Limited Edition</option>
+              <label className="block text-sm font-medium text-charcoal font-body mb-1.5">
+                Import to Category
+              </label>
+              <select
+                value={categorySlug}
+                onChange={(e) => setCategorySlug(e.target.value)}
+                className="h-11 px-4 rounded-xl border border-charcoal-200 text-sm font-body focus:outline-none focus:border-bloom-rose w-full bg-white"
+              >
+                <option value="">No category (import as uncategorised)</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.slug}>{c.name}</option>
+                ))}
               </select>
+              <p className="mt-1 text-xs text-taupe font-body">Imported products will be created as drafts assigned to this category. You can change it later when editing each product.</p>
             </div>
             <Button type="submit" variant="primary" loading={loading} leftIcon={loading ? undefined : <Search className="w-4 h-4" />}>
               {loading ? "Scraping…" : "Scrape Products"}
@@ -156,6 +181,7 @@ export default function ScraperPage() {
             <div>
               <p className="text-sm font-semibold text-charcoal font-body">Import complete</p>
               <p className="text-sm text-taupe font-body">{importStatus.success} imported successfully{importStatus.failed > 0 ? `, ${importStatus.failed} failed` : ""}.</p>
+              <p className="text-xs text-taupe font-body mt-1">Products imported as drafts. Review and publish from the Products page.</p>
             </div>
           </div>
         )}
@@ -164,7 +190,14 @@ export default function ScraperPage() {
         {results.length > 0 && (
           <div className="bg-white rounded-2xl border border-charcoal-100">
             <div className="flex items-center justify-between px-5 py-4 border-b border-charcoal-100">
-              <h2 className="font-heading text-base font-semibold text-charcoal">{results.length} products found</h2>
+              <div>
+                <h2 className="font-heading text-base font-semibold text-charcoal">{results.length} products found</h2>
+                {categorySlug && (
+                  <p className="text-xs text-taupe font-body mt-0.5">
+                    Importing to: {categories.find((c) => c.slug === categorySlug)?.name || categorySlug}
+                  </p>
+                )}
+              </div>
               <div className="flex items-center gap-3">
                 <button onClick={selectAll} className="text-xs text-bloom-rose font-body hover:underline">Select all</button>
                 <button onClick={selectNone} className="text-xs text-taupe font-body hover:underline">Select none</button>
