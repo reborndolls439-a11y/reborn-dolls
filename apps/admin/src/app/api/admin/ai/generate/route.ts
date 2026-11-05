@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
         model: "openai/gpt-oss-120b",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
-        max_tokens: 800,
+        max_tokens: 4096,
       }),
     });
 
@@ -136,7 +136,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, result });
   } catch (e) {
-    console.error("[AI_GENERATE]", e);
-    return NextResponse.json({ error: "AI generation failed. Please try again." }, { status: 500 });
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[AI_GENERATE]", msg);
+    return NextResponse.json({ error: `AI generation failed: ${msg}` }, { status: 500 });
   }
 }

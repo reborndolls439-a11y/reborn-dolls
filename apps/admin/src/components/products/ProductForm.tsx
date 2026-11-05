@@ -115,9 +115,12 @@ export function ProductForm({ productId, initialData, categories }: ProductFormP
       const data = await res.json();
       if (res.ok && data.result) {
         setForm((f) => ({ ...f, [field]: data.result }));
+      } else {
+        setError(data.error || "AI generation failed.");
       }
-    } catch { /* ignore */ }
-    finally { setGenerating(null); }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "AI generation failed.");
+    } finally { setGenerating(null); }
   }, [form, categories]);
 
   // ─── AI button component ──────────────────────────────────────────────────
