@@ -18,7 +18,12 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = { status: "PUBLISHED" };
-  if (sp.category) where.category = { slug: sp.category };
+  if (sp.category) {
+    where.OR = [
+      { category: { slug: sp.category } },
+      { additionalCategories: { some: { slug: sp.category } } },
+    ];
+  }
   if (sp.badge) where.badge = sp.badge;
   if (sp.minPrice || sp.maxPrice) {
     where.price = {

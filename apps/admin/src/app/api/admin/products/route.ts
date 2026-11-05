@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     if (!admin) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
     const body = await request.json();
-    const { name, description, shortDescription, price, salePrice, sku, categoryId, status, badge,
+    const { name, description, shortDescription, price, salePrice, sku, categoryId, additionalCategoryIds, status, badge,
       isFeatured, isNewArrival, stockQuantity, lowStockThreshold, materials, dimensions, weight,
       whatsIncluded, careInstructions, seoTitle, seoDescription, tags, images } = body;
 
@@ -38,13 +38,20 @@ export async function POST(request: NextRequest) {
         lowStockThreshold: parseInt(lowStockThreshold) || 5,
         materials, dimensions, weight, whatsIncluded, careInstructions,
         seoTitle, seoDescription, tags: tags || [],
+        additionalCategories: additionalCategoryIds?.length
+          ? { connect: additionalCategoryIds.map((id: string) => ({ id })) }
+          : undefined,
         images: images?.length ? {
           create: images.map((img: { url: string; alt?: string; isPrimary?: boolean }, i: number) => ({
             url: img.url, alt: img.alt || name, isPrimary: i === 0, sortOrder: i,
           })),
         } : undefined,
       },
-      include: { images: true, category: { select: { name: true, slug: true } } },
+      include: {
+        images: true,
+        category: { select: { name: true, slug: true } },
+        additionalCategories: { select: { id: true, name: true, slug: true } },
+      },
     });
 
     await prisma.activityLog.create({ data: { userId: admin.id, action: "product_created", entity: "product", entityId: product.id, metadata: { name } } });

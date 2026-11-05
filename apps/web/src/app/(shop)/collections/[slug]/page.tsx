@@ -29,7 +29,7 @@ export default async function CollectionPage({ params, searchParams }: Props) {
     sp.sort === "price-desc" ? [{ price: "desc" }] :
     [{ createdAt: "desc" }];
 
-  const where = { status: "PUBLISHED" as const, categoryId: category.id };
+  const where = { status: "PUBLISHED" as const, OR: [{ categoryId: category.id }, { additionalCategories: { some: { id: category.id } } }] };
 
   const [products, total, allCategories] = await Promise.all([
     prisma.product.findMany({

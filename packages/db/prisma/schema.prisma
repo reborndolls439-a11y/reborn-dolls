@@ -141,7 +141,8 @@ model Category {
 
   parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children Category[] @relation("CategoryHierarchy")
-  products Product[]
+  products Product[]  @relation("PrimaryCategory")
+  additionalProducts Product[] @relation("ProductCategories")
 
   @@map("categories")
 }
@@ -175,7 +176,8 @@ model Product {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  category     Category?      @relation(fields: [categoryId], references: [id])
+  category     Category?      @relation("PrimaryCategory", fields: [categoryId], references: [id])
+  additionalCategories Category[] @relation("ProductCategories")
   images       ProductImage[]
   orderItems   OrderItem[]
   reviews      Review[]
