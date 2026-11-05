@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Trash2, Plus, X, Upload, ArrowLeft } from "lucide-react";
+import { Save, Trash2, Plus, X, Upload, ArrowLeft, Loader2 } from "lucide-react";
 import { Button, Input } from "@reborn/ui";
 import { cn } from "@reborn/ui";
 
@@ -34,6 +34,8 @@ const EMPTY: ProductFormData = {
   tags: "", images: [],
 };
 
+const STORAGE_KEY = "reborn_product_form_draft";
+
 interface ProductFormProps {
   productId?: string;
   initialData?: Partial<ProductFormData> & { images?: ProductImage[] };
@@ -43,11 +45,46 @@ interface ProductFormProps {
 export function ProductForm({ productId, initialData, categories }: ProductFormProps) {
   const router = useRouter();
   const isEdit = !!productId;
-  const [form, setForm] = useState<ProductFormData>({ ...EMPTY, ...initialData });
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // ─── Restore from localStorage on mount (so refresh doesn't clear fields) ──
+  const [form, setForm] = useState<ProductFormData>(() => {
+    if (initialData) return { ...EMPTY, ...initialData };
+
+    // Try to restore from localStorage for new products
+    if (!productId && typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return { ...EMPTY, ...parsed };
+        }
+      } catch { /* ignore */ }
+    }
+    return EMPTY;
+  });
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<"basic" | "details" | "seo">("basic");
+
+  // ─── Save to localStorage on every change (for new products only) ──────────
+  useEffect(() => {
+    if (!productId && typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
+      } catch { /* ignore */ }
+    }
+  }, [form, productId]);
+
+  // ─── Clear draft after successful save ─────────────────────────────────────
+  const clearDraft = () => {
+    if (typeof window !== "undefined") {
+      try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    }
+  };
 
   const set = (k: keyof ProductFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -55,7 +92,59 @@ export function ProductForm({ productId, initialData, categories }: ProductFormP
   const setCheck = (k: keyof ProductFormData) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.checked }));
 
-  const addImage = () => {
+  // ─── File upload (multiple files supported) ────────────────────────────────
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const uploadedImages: ProductImage[] = [];
+
+    for (const file of Array.from(files)) {
+      // Validate
+      if (!file.type.startsWith("image/")) continue;
+      if (file.size > 10 * 1024 * 1024) continue;
+
+      try {
+        // Convert to base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        // Upload to Cloudinary via admin API
+        const res = await fetch("/api/admin/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file: base64, folder: "reborn-dolls/products" }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.url) {
+          uploadedImages.push({
+            url: data.url,
+            alt: file.name.replace(/\.[^/.]+$/, ""),
+            isPrimary: form.images.length + uploadedImages.length === 0,
+          });
+        }
+      } catch { /* skip failed upload */ }
+    }
+
+    if (uploadedImages.length > 0) {
+      setForm((f) => ({
+        ...f,
+        images: [...f.images, ...uploadedImages],
+      }));
+    }
+
+    setUploading(false);
+    // Reset input so same files can be selected again
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const addImageUrl = () => {
     if (!imageUrl.trim()) return;
     setForm((f) => ({ ...f, images: [...f.images, { url: imageUrl.trim(), isPrimary: f.images.length === 0 }] }));
     setImageUrl("");
@@ -63,6 +152,9 @@ export function ProductForm({ productId, initialData, categories }: ProductFormP
 
   const removeImage = (i: number) =>
     setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }));
+
+  const setPrimary = (i: number) =>
+    setForm((f) => ({ ...f, images: f.images.map((img, idx) => ({ ...img, isPrimary: idx === i })) }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +170,7 @@ export function ProductForm({ productId, initialData, categories }: ProductFormP
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Save failed."); return; }
+      clearDraft();
       router.push("/products");
       router.refresh();
     } catch { setError("Network error. Please try again."); }
@@ -195,37 +288,78 @@ export function ProductForm({ productId, initialData, categories }: ProductFormP
               {/* Images */}
               <div className="bg-white rounded-2xl border border-charcoal-100 p-6 space-y-4">
                 <h2 className="font-heading text-sm font-semibold text-charcoal">Product Images</h2>
-                <div className="flex gap-2">
-                  <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Paste an image URL (Cloudinary, Unsplash, etc.)"
-                    className="flex-1 h-9 px-4 rounded-xl border border-charcoal-200 text-sm font-body focus:outline-none focus:border-bloom-rose" />
-                  <button type="button" onClick={addImage} className="h-9 px-4 bg-bloom-rose text-white rounded-xl text-sm font-medium hover:bg-bloom-rose-600 transition-colors flex items-center gap-1.5">
-                    <Plus className="w-3.5 h-3.5" /> Add
-                  </button>
-                </div>
+
+                {/* Upload zone — click to browse, or drag & drop */}
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full flex flex-col items-center justify-center gap-2 h-36 border-2 border-dashed border-charcoal-200 rounded-xl hover:border-bloom-rose hover:bg-bloom-rose-50/30 transition-colors text-taupe disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin text-bloom-rose" />
+                      <span className="text-sm font-body">Uploading…</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-full bg-bloom-rose-50 flex items-center justify-center">
+                        <Upload className="w-5 h-5 text-bloom-rose" />
+                      </div>
+                      <span className="text-sm font-body">Click to upload images</span>
+                      <span className="text-xs text-taupe font-body">Select multiple — PNG, JPG, WebP up to 10MB each</span>
+                    </>
+                  )}
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+
+                {/* Image grid */}
                 {form.images.length > 0 && (
                   <div className="grid grid-cols-4 gap-3">
                     {form.images.map((img, i) => (
                       <div key={i} className="relative group">
                         <div className="aspect-square rounded-xl overflow-hidden bg-soft-blush-100">
-                          <img src={img.url} alt={img.alt || `Image ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/150"; }} />
+                          <img src={img.url} alt={img.alt || `Image ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                         </div>
+                        {/* Remove button */}
                         <button type="button" onClick={() => removeImage(i)}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Remove image">
                           <X className="w-3 h-3" />
                         </button>
-                        {i === 0 && (
+                        {/* Primary badge / set primary */}
+                        {img.isPrimary ? (
                           <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-bloom-rose text-white px-1.5 py-0.5 rounded-full font-body">Primary</span>
+                        ) : (
+                          <button type="button" onClick={() => setPrimary(i)}
+                            className="absolute bottom-1.5 left-1.5 text-[10px] bg-black/50 text-white px-1.5 py-0.5 rounded-full font-body opacity-0 group-hover:opacity-100 transition-opacity hover:bg-bloom-rose"
+                            aria-label="Set as primary">
+                            Set primary
+                          </button>
                         )}
                       </div>
                     ))}
                   </div>
                 )}
-                {form.images.length === 0 && (
-                  <div className="border-2 border-dashed border-charcoal-200 rounded-xl p-8 text-center">
-                    <Upload className="w-8 h-8 text-taupe-300 mx-auto mb-2" />
-                    <p className="text-sm text-taupe font-body">Paste image URLs above to add product images</p>
+
+                {/* URL paste (optional alternative) */}
+                <div className="pt-2 border-t border-charcoal-50">
+                  <p className="text-xs text-taupe font-body mb-2">Or paste an image URL:</p>
+                  <div className="flex gap-2">
+                    <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..."
+                      className="flex-1 h-9 px-4 rounded-xl border border-charcoal-200 text-sm font-body focus:outline-none focus:border-bloom-rose" />
+                    <button type="button" onClick={addImageUrl} className="h-9 px-4 bg-charcoal-100 text-charcoal rounded-xl text-sm font-medium hover:bg-charcoal-200 transition-colors flex items-center gap-1.5">
+                      <Plus className="w-3.5 h-3.5" /> Add URL
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
             </>
           )}
@@ -238,7 +372,7 @@ export function ProductForm({ productId, initialData, categories }: ProductFormP
               <Input label="Dimensions" value={form.dimensions} onChange={set("dimensions")} placeholder={`e.g. 19" length, 5 lbs weight`} />
               <Input label="Weight" value={form.weight} onChange={set("weight")} placeholder="e.g. 5 lbs" />
               <div>
-                <label className="block text-sm font-medium text-charcoal font-body mb-1.5">What's included</label>
+                <label className="block text-sm font-medium text-charcoal font-body mb-1.5">What&apos;s included</label>
                 <textarea value={form.whatsIncluded} onChange={set("whatsIncluded")} rows={3} placeholder="e.g. Doll, outfit, blanket, certificate of authenticity"
                   className="w-full px-4 py-3 rounded-xl border border-charcoal-200 text-sm font-body focus:outline-none focus:border-bloom-rose resize-none" />
               </div>
@@ -267,7 +401,7 @@ export function ProductForm({ productId, initialData, categories }: ProductFormP
                 <div className="bg-charcoal-50 rounded-xl p-4 mt-2">
                   <p className="text-xs font-semibold text-taupe uppercase tracking-wider font-body mb-2">Search Preview</p>
                   <p className="text-blue-700 text-sm font-medium truncate">{form.seoTitle || form.name}</p>
-                  <p className="text-green-700 text-xs">reborndolls.com › products › {form.name ? form.name.toLowerCase().replace(/\s+/g, "-") : "..."}</p>
+                  <p className="text-green-700 text-xs">reborndolls.com &rsaquo; products &rsaquo; {form.name ? form.name.toLowerCase().replace(/\s+/g, "-") : "..."}</p>
                   <p className="text-charcoal-500 text-xs mt-0.5 line-clamp-2">{form.seoDescription || form.shortDescription || form.description.replace(/<[^>]+>/g, "").slice(0, 160)}</p>
                 </div>
               )}
