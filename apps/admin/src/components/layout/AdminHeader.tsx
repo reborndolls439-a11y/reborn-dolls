@@ -18,7 +18,7 @@ export function AdminHeader({ title, subtitle, unread = 0 }: AdminHeaderProps) {
           <ExternalLink className="w-3.5 h-3.5" /> View Store
         </Link>
         <div className="relative">
-          <Link href="/notifications" className="w-9 h-9 flex items-center justify-center text-taupe hover:text-charcoal hover:bg-charcoal-50 rounded-full transition-colors">
+          <Link href="/activity" className="w-9 h-9 flex items-center justify-center text-taupe hover:text-charcoal hover:bg-charcoal-50 rounded-full transition-colors">
             <Bell className="w-5 h-5" />
           </Link>
           {unread > 0 && (
