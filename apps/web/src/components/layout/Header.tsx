@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown } from "lucide-react";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, useCartItemCount } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@reborn/ui";
@@ -45,7 +45,8 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  const { itemCount, openCart } = useCartStore();
+  const { openCart } = useCartStore();
+  const itemCount = useCartItemCount();
   const { items: wishlistItems } = useWishlistStore();
   const { user } = useAuthStore();
 

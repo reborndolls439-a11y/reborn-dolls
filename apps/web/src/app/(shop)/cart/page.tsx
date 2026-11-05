@@ -4,14 +4,16 @@ import React from "react";
 import Link from "next/link";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import { Button, EmptyState } from "@reborn/ui";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, useCartSubtotal, useCartItemCount } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 
 const FREE_SHIPPING_THRESHOLD = 150;
 const SHIPPING_COST = 9.99;
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, subtotal, itemCount } = useCartStore();
+  const { items, removeItem, updateQuantity } = useCartStore();
+  const subtotal = useCartSubtotal();
+  const itemCount = useCartItemCount();
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total = subtotal + shippingCost;
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);

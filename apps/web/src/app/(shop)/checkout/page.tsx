@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button, Input } from "@reborn/ui";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, useCartSubtotal } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
@@ -24,7 +24,8 @@ const SHIPPING_COST = 9.99;
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, subtotal, clearCart } = useCartStore();
+  const { items, clearCart } = useCartStore();
+  const subtotal = useCartSubtotal();
   const { user } = useAuthStore();
   const [step, setStep] = useState<Step>("contact");
   const [loading, setLoading] = useState(false);

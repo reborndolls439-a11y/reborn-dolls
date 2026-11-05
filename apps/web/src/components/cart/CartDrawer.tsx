@@ -4,11 +4,13 @@ import React from "react";
 import Link from "next/link";
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import { Drawer, Button, EmptyState } from "@reborn/ui";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, useCartSubtotal, useCartItemCount } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 
 export function CartDrawer() {
-  const { isOpen, closeCart, items, removeItem, updateQuantity, subtotal, itemCount } = useCartStore();
+  const { isOpen, closeCart, items, removeItem, updateQuantity } = useCartStore();
+  const subtotal = useCartSubtotal();
+  const itemCount = useCartItemCount();
   const FREE_SHIPPING = 150;
   const remaining = Math.max(0, FREE_SHIPPING - subtotal);
 

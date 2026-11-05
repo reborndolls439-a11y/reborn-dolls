@@ -6,10 +6,6 @@ interface CartStore {
   items: CartItem[];
   isOpen: boolean;
 
-  // Computed
-  itemCount: number;
-  subtotal: number;
-
   // Actions
   addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
   removeItem: (productId: string) => void;
@@ -25,40 +21,21 @@ export const useCartStore = create<CartStore>()(
       items: [],
       isOpen: false,
 
-      get itemCount() {
-        return get().items.reduce((sum, item) => sum + item.quantity, 0);
-      },
-
-      get subtotal() {
-        return get().items.reduce((sum, item) => {
-          const price = item.salePrice ?? item.price;
-          return sum + price * item.quantity;
-        }, 0);
-      },
-
       addItem: (incoming) => {
         const { items } = get();
         const existing = items.find((i) => i.productId === incoming.productId);
         const qty = incoming.quantity ?? 1;
 
         if (existing) {
-          const newQty = Math.min(
-            existing.quantity + qty,
-            incoming.stockQuantity
-          );
+          const newQty = Math.min(existing.quantity + qty, incoming.stockQuantity);
           set({
             items: items.map((i) =>
-              i.productId === incoming.productId
-                ? { ...i, quantity: newQty }
-                : i
+              i.productId === incoming.productId ? { ...i, quantity: newQty } : i
             ),
             isOpen: true,
           });
         } else {
-          set({
-            items: [...items, { ...incoming, quantity: qty }],
-            isOpen: true,
-          });
+          set({ items: [...items, { ...incoming, quantity: qty }], isOpen: true });
         }
       },
 
@@ -90,3 +67,18 @@ export const useCartStore = create<CartStore>()(
     }
   )
 );
+
+// ─── Selectors (computed outside the store — works correctly after hydration) ─
+
+/** Total number of items across all quantities */
+export const useCartItemCount = () =>
+  useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
+
+/** Cart subtotal in dollars */
+export const useCartSubtotal = () =>
+  useCartStore((state) =>
+    state.items.reduce((sum, item) => {
+      const price = item.salePrice ?? item.price;
+      return sum + price * item.quantity;
+    }, 0)
+  );
