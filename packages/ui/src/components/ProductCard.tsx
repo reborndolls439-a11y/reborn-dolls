@@ -212,8 +212,8 @@ export function ProductCard({
               <Star
                 key={i}
                 className="w-3.5 h-3.5"
-                fill={i < Math.round(rating) ? "#C86B7A" : "none"}
-                stroke={i < Math.round(rating) ? "#C86B7A" : "#8A7D76"}
+                fill={i < Math.round(rating) ? "#2FE6DE" : "none"}
+                stroke={i < Math.round(rating) ? "#2FE6DE" : "#5a7a8a"}
               />
             ))}
             {reviewCount !== undefined && (

@@ -127,8 +127,8 @@ export default async function ProductPage({ params }: Props) {
                 <div className="flex gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className="w-4 h-4"
-                      fill={i < Math.round(product.averageRating!) ? "#C86B7A" : "none"}
-                      stroke={i < Math.round(product.averageRating!) ? "#C86B7A" : "#8A7D76"} />
+                      fill={i < Math.round(product.averageRating!) ? "#2FE6DE" : "none"}
+                      stroke={i < Math.round(product.averageRating!) ? "#2FE6DE" : "#5a7a8a"} />
                   ))}
                 </div>
                 <span className="text-sm text-taupe font-body">

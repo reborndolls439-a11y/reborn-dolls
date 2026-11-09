@@ -6,8 +6,10 @@
 
 @layer base {
   :root {
-    --color-background: #FFFDF9;
-    --color-foreground: #2D2929;
+    --color-background: #F7FBFE;
+    --color-foreground: #02182B;
+    --color-primary:    #2FE6DE;
+    --color-secondary:  #02182B;
   }
 
   * {
@@ -23,8 +25,8 @@
   }
 
   body {
-    background-color: #FFFDF9;
-    color: #2D2929;
+    background-color: #F7FBFE;
+    color: #02182B;
     font-family: 'Inter', system-ui, sans-serif;
     line-height: 1.6;
   }
@@ -34,27 +36,17 @@
     line-height: 1.2;
   }
 
-  /* Focus ring for accessibility */
+  /* Focus ring */
   :focus-visible {
-    outline: 2px solid #C86B7A;
+    outline: 2px solid #2FE6DE;
     outline-offset: 2px;
   }
 
   /* Scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #F7E6E8;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #C86B7A;
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #b54d5e;
-  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #e8f1f8; }
+  ::-webkit-scrollbar-thumb { background: #2FE6DE; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #18cec6; }
 }
 
 @layer utilities {

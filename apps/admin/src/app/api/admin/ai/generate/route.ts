@@ -48,13 +48,13 @@ Store name: Reborn Dolls
 Format: [Product Name] | [Brief descriptor] | Reborn Dolls
 Return ONLY the title string, nothing else.`,
 
-  seoDescription: (ctx) => `Write an SEO meta description (150-160 characters) for this reborn doll product.
+  seoDescription: (ctx) => `Write an SEO meta description for this reborn doll product. Keep it concise, around 1-2 sentences.
 Product name: ${ctx.name}
 ${ctx.shortDescription ? `Short description: ${ctx.shortDescription}` : ""}
 ${ctx.category ? `Category: ${ctx.category}` : ""}
 Store name: Reborn Dolls
-Include: product name, key feature, call to action.
-Return ONLY the meta description string, nothing else.`,
+Include: product name, key feature, and a call to action.
+Return ONLY the meta description text, nothing else.`,
 
   tags: (ctx) => `Generate 8-12 relevant SEO tags (comma-separated, lowercase) for this reborn doll product.
 Product name: ${ctx.name}
