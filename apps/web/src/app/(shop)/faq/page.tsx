@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 const faqs = [
   { q: "What is a reborn doll?", a: "A reborn doll is a hand-crafted, lifelike baby doll created by a skilled artist. Using multiple layers of paint, hand-rooted hair, and carefully selected materials, artists transform vinyl kits into extraordinarily realistic collectibles." },
-  { q: "How are your dolls packaged?", a: "Every doll is wrapped in tissue paper, nestled in a protective inner box, and shipped in a sturdy outer box. We take packaging very seriously — your doll will arrive as beautiful as the day it left us." },
+  { q: "How are your dolls packaged?", a: "Every doll is wrapped in tissue paper, nestled in a protective inner box, and shipped in a sturdy outer box. We take packaging very seriously and your doll will arrive as beautiful as the day it left us." },
   { q: "How long does shipping take?", a: "Standard orders typically arrive within 5–10 business days. We'll provide tracking information as soon as your order ships. Free shipping applies to orders over $150." },
   { q: "What is your return policy?", a: "We accept returns within 30 days of delivery for items in their original, unused condition. Please visit our Returns & Refunds page for full details and to initiate a return." },
   { q: "How do I care for my reborn doll?", a: "Spot clean with a damp cloth only. Avoid direct sunlight, extreme temperatures, and harsh chemicals. Store in a cool, dry place, preferably in the original box or a display case." },

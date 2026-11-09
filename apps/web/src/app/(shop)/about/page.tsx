@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Heart, ShieldCheck, Package, Headphones, Star } from "lucide-react";
 
-export const metadata: Metadata = { title: "About Us", description: "Learn about Reborn Dolls — our story, our craft, and our commitment to quality." };
+export const metadata: Metadata = { title: "About Us", description: "Learn about Reborn Dolls, our story, our craft, and our commitment to quality." };
 
 export default function AboutPage() {
   return (
@@ -27,7 +27,7 @@ export default function AboutPage() {
               Reborn Dolls was founded on a simple belief: that truly beautiful collectible art deserves a home where it's presented, celebrated, and understood. Every piece we offer is carefully selected for its quality, artistry, and emotional resonance.
             </p>
             <p className="text-taupe font-body leading-relaxed mb-4">
-              We work directly with skilled artists to bring you dolls that represent the pinnacle of reborn craftsmanship — from hand-painted, heat-set skin tones to individually hand-rooted hair and hand-blown glass eyes.
+              We work directly with skilled artists to bring you dolls that represent the pinnacle of reborn craftsmanship, from hand-painted, heat-set skin tones to individually hand-rooted hair and hand-blown glass eyes.
             </p>
             <p className="text-taupe font-body leading-relaxed">
               Whether you're a lifelong collector or discovering this art form for the first time, we're here to guide you to the perfect piece and provide the personal care every customer deserves.

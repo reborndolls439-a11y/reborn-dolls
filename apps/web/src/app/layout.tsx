@@ -5,7 +5,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 
 export const metadata: Metadata = {
   title: {
-    default: "Reborn Dolls — Where Artistry Comes to Life",
+  title: "Reborn Dolls | Where Artistry Comes to Life",
     template: "%s | Reborn Dolls",
   },
   description:
@@ -15,13 +15,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Reborn Dolls",
-    title: "Reborn Dolls — Where Artistry Comes to Life",
+    title: "Reborn Dolls | Where Artistry Comes to Life",
     description: "Discover exquisitely crafted reborn dolls and collectibles.",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Reborn Dolls — Where Artistry Comes to Life",
+    title: "Reborn Dolls | Where Artistry Comes to Life",
     description: "Discover exquisitely crafted reborn dolls and collectibles.",
   },
   robots: {

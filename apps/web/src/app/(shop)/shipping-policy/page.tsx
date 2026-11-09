@@ -17,7 +17,7 @@ export default function ShippingPolicyPage() {
         <h2>Packaging</h2>
         <p>Every order is carefully packaged to ensure your doll arrives in perfect condition. We use protective wrapping, custom inserts, and sturdy outer boxes.</p>
         <h2>International Shipping</h2>
-        <p>We currently ship within the United States. International shipping availability varies — please contact us for inquiries.</p>
+        <p>We currently ship within the United Kingdom. International shipping availability varies, please contact us for inquiries.</p>
         <h2>Questions?</h2>
         <p>Contact us at <a href="mailto:hello@reborndolls.com" className="text-bloom-rose hover:underline">hello@reborndolls.com</a> and we'll be happy to help.</p>
       </div>

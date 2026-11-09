@@ -12,9 +12,9 @@ import { NewsletterSection } from "@/components/home/NewsletterSection";
 import type { ProductSummary } from "@reborn/types";
 
 export const metadata: Metadata = {
-  title: "Reborn Dolls — Where Artistry Comes to Life",
+  title: "Reborn Dolls | Where Artistry Comes to Life",
   description:
-    "Discover our exquisitely crafted reborn dolls and collectibles. Premium lifelike dolls, silicone dolls, and accessories — all carefully curated and beautifully presented.",
+    "Discover our exquisitely crafted reborn dolls and collectibles. Premium lifelike dolls, silicone dolls, and accessories, all carefully curated and beautifully presented.",
 };
 
 export const revalidate = 3600; // revalidate every hour

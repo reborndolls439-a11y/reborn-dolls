@@ -203,7 +203,7 @@ export default function CheckoutPage() {
                 <div className="flex gap-3">
                   <Button variant="outline" size="lg" leftIcon={<ArrowLeft className="w-4 h-4" />} onClick={() => setStep("shipping")}>Back</Button>
                   <Button variant="primary" size="lg" className="flex-1" loading={loading} onClick={handlePlaceOrder}>
-                    Place Order — {formatPrice(total)}
+                    Place Order {formatPrice(total)}
                   </Button>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex items-center gap-2 text-xs text-taupe font-body justify-center">
               <ShieldCheck className="w-3.5 h-3.5" />
-              Secure and private — your data is protected
+              Secure and private, your data is protected
             </div>
           </div>
         </div>

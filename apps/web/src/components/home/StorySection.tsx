@@ -46,7 +46,7 @@ export function StorySection() {
               Each doll in our collection is the result of extraordinary skill, patience, and passion. From the delicate hand-rooted hair to the carefully layered skin painting, every detail is crafted to create an emotional, lasting connection.
             </p>
             <p className="text-taupe font-body leading-relaxed mb-8">
-              We believe that a truly beautiful doll deserves a presentation worthy of its artistry — which is why every order is packaged with the same care and attention that went into creating it.
+              We believe that a truly beautiful doll deserves a presentation worthy of its artistry, which is why every order is packaged with the same care and attention that went into creating it.
             </p>
 
             <div className="grid grid-cols-3 gap-6 mb-8">

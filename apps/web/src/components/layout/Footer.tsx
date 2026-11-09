@@ -40,7 +40,7 @@ export function Footer() {
                 Stay in the Loop
               </h3>
               <p className="text-white/80 text-sm font-body">
-                New arrivals, exclusive offers, and collecting guides — straight to your inbox.
+                New arrivals, exclusive offers, and collecting guides straight to your inbox.
               </p>
             </div>
             <form className="flex gap-2 w-full md:w-auto" onSubmit={(e) => e.preventDefault()}>

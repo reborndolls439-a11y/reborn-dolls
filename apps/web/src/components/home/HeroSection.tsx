@@ -25,7 +25,7 @@ export function HeroSection() {
             </h1>
 
             <p className="text-lg text-taupe font-body leading-relaxed mb-10 max-w-md">
-              Each doll in our collection is a masterwork — hand-crafted, thoughtfully presented, and ready to be cherished. Find your perfect piece today.
+              Each doll in our collection is a masterwork, hand-crafted, thoughtfully presented, and ready to be cherished. Find your perfect piece today.
             </p>
 
             <div className="flex flex-wrap gap-4">

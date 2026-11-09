@@ -4,7 +4,7 @@ import { Star } from "lucide-react";
 const testimonials = [
   {
     name: "Margaret L.",
-    location: "California, USA",
+    location: "London, UK",
     rating: 5,
     text: "I've been collecting reborn dolls for over 15 years, and the quality here is absolutely exceptional. My Aurora arrived beautifully packaged and exceeded every expectation. The skin painting is breathtakingly realistic.",
     product: "Aurora Reborn Baby Girl",
@@ -12,17 +12,17 @@ const testimonials = [
   },
   {
     name: "Sandra K.",
-    location: "Texas, USA",
+    location: "Manchester, UK",
     rating: 5,
-    text: "Bought the Seraphina silicone doll as a gift for my mother — she was moved to tears. The detail in the fingers and the weight of the doll is extraordinary. Customer service was warm and personal throughout.",
+    text: "Bought the Seraphina silicone doll as a gift for my mother and she was moved to tears. The detail in the fingers and the weight of the doll is extraordinary. Customer service was warm and personal throughout.",
     product: "Seraphina Full-Body Silicone",
     avatar: "S",
   },
   {
     name: "Jennifer M.",
-    location: "Florida, USA",
+    location: "Edinburgh, UK",
     rating: 5,
-    text: "My third purchase from Reborn Dolls and each one has been perfect. The packaging is like unwrapping a luxury gift. The communication was wonderful — they emailed me updates throughout.",
+    text: "My third purchase from Reborn Dolls and each one has been perfect. The packaging is like unwrapping a luxury gift. The communication was wonderful and they emailed me updates throughout.",
     product: "Sophia Reborn Toddler Girl",
     avatar: "J",
   },
@@ -54,7 +54,7 @@ export function TestimonialsSection() {
               </div>
 
               <p className="text-charcoal font-body text-sm leading-relaxed mb-6 italic">
-                "{t.text}"
+                &ldquo;{t.text}&rdquo;
               </p>
 
               <div className="flex items-center gap-3 pt-4 border-t border-charcoal-50">

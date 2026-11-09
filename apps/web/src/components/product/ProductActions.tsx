@@ -69,7 +69,7 @@ export function ProductActions({ product }: ProductActionsProps) {
       ) : isLowStock ? (
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-          <span className="text-sm text-amber-700 font-body font-medium">Only {product.stockQuantity} left — order soon</span>
+          <span className="text-sm text-amber-700 font-body font-medium">Only {product.stockQuantity} left, order soon</span>
         </div>
       ) : (
         <div className="flex items-center gap-2">
