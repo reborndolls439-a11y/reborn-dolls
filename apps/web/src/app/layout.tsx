@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/components/shared/ToastProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { ThemeProvider } from "@/components/shared/ThemeProvider";
 
 export const metadata: Metadata = {
   title: {
-  title: "Reborn Dolls | Where Artistry Comes to Life",
+    default: "Reborn Dolls | Where Artistry Comes to Life",
     template: "%s | Reborn Dolls",
   },
   description:
@@ -24,11 +25,7 @@ export const metadata: Metadata = {
     title: "Reborn Dolls | Where Artistry Comes to Life",
     description: "Discover exquisitely crafted reborn dolls and collectibles.",
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true },
-  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -42,10 +39,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="bg-ivory text-charcoal antialiased">
-        <ToastProvider />
-        <CartDrawer />
-        {children}
+      <body suppressHydrationWarning>
+        {/* defaultTheme="dark" — dark is the primary experience, user can switch to light */}
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
+          <ToastProvider />
+          <CartDrawer />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

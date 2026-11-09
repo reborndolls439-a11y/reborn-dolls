@@ -30,7 +30,7 @@ const companyLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-charcoal text-white">
+    <footer className="bg-[var(--secondary)] text-[var(--secondary-fg)]">
       {/* Newsletter band */}
       <div className="bg-bloom-rose">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
