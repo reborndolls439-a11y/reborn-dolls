@@ -183,16 +183,16 @@ export function FilterPanel({
             type="number"
             value={filters.minPrice}
             onChange={(e) => onFilterChange("minPrice", e.target.value)}
-            placeholder="Min $"
+            placeholder="Min £"
             min="0"
             className="w-full h-9 px-3 text-sm rounded-lg border border-charcoal-200 font-body focus:outline-none focus:border-bloom-rose"
           />
-          <span className="text-taupe">—</span>
+          <span className="text-taupe">to</span>
           <input
             type="number"
             value={filters.maxPrice}
             onChange={(e) => onFilterChange("maxPrice", e.target.value)}
-            placeholder="Max $"
+            placeholder="Max £"
             min="0"
             className="w-full h-9 px-3 text-sm rounded-lg border border-charcoal-200 font-body focus:outline-none focus:border-bloom-rose"
           />

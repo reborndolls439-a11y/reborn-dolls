@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useTransition } from "react";
+import React, { useState, useCallback, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { SlidersHorizontal, X, Grid3X3, LayoutList } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { Drawer, Pagination } from "@reborn/ui";
 import { FilterPanel } from "./FilterPanel";
 import { ProductGrid } from "./ProductGrid";
@@ -29,15 +29,25 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
   const [loading, setLoading] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const [filters, setFilters] = useState({
-    category: initialFilters.category || "",
-    badge: initialFilters.badge || "",
-    minPrice: initialFilters.minPrice || "",
-    maxPrice: initialFilters.maxPrice || "",
-    inStock: initialFilters.inStock === "true",
-    sort: initialFilters.sort || "newest",
-  });
-  const [page, setPage] = useState(Number(initialFilters.page) || 1);
+  // Always read filter state from the URL — this is the single source of truth.
+  // When the user navigates back, the URL still has the filters so state persists.
+  const getFiltersFromUrl = useCallback(() => ({
+    category: searchParams.get("category") || "",
+    badge: searchParams.get("badge") || "",
+    minPrice: searchParams.get("minPrice") || "",
+    maxPrice: searchParams.get("maxPrice") || "",
+    inStock: searchParams.get("inStock") === "true",
+    sort: searchParams.get("sort") || "newest",
+  }), [searchParams]);
+
+  const [filters, setFilters] = useState(getFiltersFromUrl);
+  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
+
+  // Sync filter state when URL changes (e.g. back button)
+  useEffect(() => {
+    setFilters(getFiltersFromUrl());
+    setPage(Number(searchParams.get("page")) || 1);
+  }, [searchParams, getFiltersFromUrl]);
 
   const fetchProducts = useCallback(async (f: typeof filters, p: number) => {
     setLoading(true);
@@ -58,44 +68,58 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
     finally { setLoading(false); }
   }, []);
 
-  // Sync URL
+  // Whenever URL params change, fetch new products
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (filters.category) params.set("category", filters.category);
-    if (filters.badge) params.set("badge", filters.badge);
-    if (filters.minPrice) params.set("minPrice", filters.minPrice);
-    if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
-    if (filters.inStock) params.set("inStock", "true");
-    if (filters.sort !== "newest") params.set("sort", filters.sort);
-    if (page > 1) params.set("page", String(page));
+    fetchProducts(getFiltersFromUrl(), Number(searchParams.get("page")) || 1);
+  }, [searchParams]); // eslint-disable-line
+
+  // Push a filter change to the URL — the effect above will then fetch
+  const applyFilter = useCallback((key: keyof typeof filters, value: string | boolean) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "" || value === false) {
+      params.delete(key);
+    } else {
+      params.set(key, String(value));
+    }
+    // Reset to page 1 on filter change (except sort)
+    if (key !== "sort") params.delete("page");
     startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
     });
-    fetchProducts(filters, page);
-  }, [filters, page]); // eslint-disable-line
+  }, [searchParams, pathname, router]);
 
-  const handleFilterChange = (key: keyof typeof filters, value: string | boolean) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-    setPage(1);
-  };
+  const handleClearAll = useCallback(() => {
+    startTransition(() => {
+      router.push(pathname, { scroll: false });
+    });
+  }, [pathname, router]);
 
-  const handleClearAll = () => {
-    setFilters({ category: "", badge: "", minPrice: "", maxPrice: "", inStock: false, sort: "newest" });
-    setPage(1);
-  };
+  const handlePageChange = useCallback((p: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (p === 1) params.delete("page");
+    else params.set("page", String(p));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }, [searchParams, pathname, router]);
 
   const activeFilterCount = [filters.category, filters.badge, filters.minPrice, filters.maxPrice, filters.inStock].filter(Boolean).length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       {/* Header row */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-sm text-taupe font-body">
-            {loading ? "Loading…" : `${meta.total} product${meta.total !== 1 ? "s" : ""}`}
-          </p>
-        </div>
+        <p className="text-sm text-taupe font-body">
+          {loading ? "Loading…" : `${meta.total} product${meta.total !== 1 ? "s" : ""}`}
+        </p>
         <div className="flex items-center gap-3">
+          {/* Active filter chips on mobile */}
+          {filters.category && (
+            <span className="hidden sm:flex items-center gap-1 text-xs bg-bloom-rose-50 text-bloom-rose border border-bloom-rose-200 px-2.5 py-1 rounded-full font-body">
+              {categories.find(c => c.slug === filters.category)?.name || filters.category}
+            </span>
+          )}
           {/* Mobile filter button */}
           <button
             onClick={() => setMobileFiltersOpen(true)}
@@ -117,7 +141,7 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
         <aside className="hidden lg:block w-56 shrink-0">
           <FilterPanel
             filters={filters}
-            onFilterChange={handleFilterChange}
+            onFilterChange={applyFilter}
             onClearAll={handleClearAll}
             categories={categories}
           />
@@ -131,7 +155,7 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
               <Pagination
                 currentPage={page}
                 totalPages={meta.totalPages}
-                onPageChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                onPageChange={handlePageChange}
               />
             </div>
           )}
@@ -143,8 +167,8 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
         <div className="p-4">
           <FilterPanel
             filters={filters}
-            onFilterChange={handleFilterChange}
-            onClearAll={handleClearAll}
+            onFilterChange={(k, v) => { applyFilter(k, v); setMobileFiltersOpen(false); }}
+            onClearAll={() => { handleClearAll(); setMobileFiltersOpen(false); }}
             categories={categories}
           />
           <button
