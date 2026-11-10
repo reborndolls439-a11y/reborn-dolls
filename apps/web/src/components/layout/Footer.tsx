@@ -67,9 +67,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-bloom-rose flex items-center justify-center">
-                <span className="text-white text-xs font-bold font-heading">R</span>
-              </div>
+              <img src="/icon.jpeg" alt="UK Reborn Dolls" className="w-8 h-8 rounded-full object-cover" />
               <span className="font-heading text-xl font-bold text-white">
                 Reborn <span className="text-bloom-rose-400">Dolls</span>
               </span>

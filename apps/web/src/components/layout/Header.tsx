@@ -88,9 +88,7 @@ export function Header() {
 
             {/* Logo */}
             <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-bloom-rose flex items-center justify-center">
-                <span className="text-[var(--primary-text)] text-xs font-bold font-heading">R</span>
-              </div>
+              <img src="/icon.jpeg" alt="UK Reborn Dolls" className="w-9 h-9 rounded-full object-cover ring-1 ring-[var(--border)]" />
               <div className="hidden sm:block">
                 <span className="font-heading text-xl font-bold text-[var(--fg)]">
                   UK Reborn <span className="text-bloom-rose">Dolls</span>
