@@ -3,6 +3,7 @@ import "./globals.css";
 import { ToastProvider } from "@/components/shared/ToastProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
+import { VisitorTracker } from "@/components/shared/VisitorTracker";
 
 export const metadata: Metadata = {
   title: {
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body suppressHydrationWarning>
         {/* defaultTheme="dark" — dark is the primary experience, user can switch to light */}
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
+          <VisitorTracker />
           <ToastProvider />
           <CartDrawer />
           {children}

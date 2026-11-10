@@ -5,8 +5,8 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "Reborn Dolls <hello@reborndolls.com>";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@reborndolls.com";
+const FROM_EMAIL = process.env.FROM_EMAIL || "Reborn Dolls <hello@ukreborndolls.co.uk>";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "hello@ukreborndolls.co.uk";
 
 // ─── Order notification to admin ─────────────────────────────────────────────
 
@@ -145,7 +145,7 @@ export async function sendOrderConfirmationToCustomer(order: {
 
         <div style="margin-top:28px;padding:20px;background:#e8f1f8;border-radius:10px;text-align:center;">
           <p style="margin:0 0 6px;font-size:14px;font-weight:600;">Have questions?</p>
-          <p style="margin:0;font-size:13px;color:#5a7a8a;">Reply to this email or contact us at <a href="mailto:hello@reborndolls.com" style="color:#2FE6DE;">hello@reborndolls.com</a></p>
+          <p style="margin:0;font-size:13px;color:#5a7a8a;">Reply to this email or contact us at <a href="mailto:hello@ukreborndolls.co.uk" style="color:#2FE6DE;">hello@ukreborndolls.co.uk</a></p>
         </div>
       </div>
       <div style="padding:20px;text-align:center;">

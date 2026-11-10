@@ -6,7 +6,7 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "Reborn Dolls <hello@reborndolls.com>";
+const FROM_EMAIL = process.env.FROM_EMAIL || "Reborn Dolls <hello@ukreborndolls.co.uk>";
 
 export async function sendOrderStatusUpdate(email: string, name: string, orderNumber: string, status: string, trackingNumber?: string) {
   const statusMessages: Record<string, string> = {
