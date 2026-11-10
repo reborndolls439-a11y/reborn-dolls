@@ -18,6 +18,8 @@ export interface ProductCardProps {
   stockQuantity?: number;
   rating?: number;
   reviewCount?: number;
+  /** Override the default price formatter (e.g. for currency switching) */
+  priceFormatter?: (amount: number) => string;
   isWishlisted?: boolean;
   onWishlistToggle?: (id: string) => void;
   onQuickView?: (id: string) => void;
@@ -62,7 +64,9 @@ export function ProductCard({
   href,
   className,
   variant = "default",
+  priceFormatter,
 }: ProductCardProps) {
+  const fmt = priceFormatter || formatPrice;
   const isSoldOut = stockQuantity === 0 || badge === "SOLD_OUT";
   const isLowStock = stockQuantity > 0 && stockQuantity <= 5;
   const discount = salePrice ? getDiscountPercentage(price, salePrice) : null;
@@ -95,11 +99,11 @@ export function ProductCard({
           <div className="mt-2 flex items-center gap-2">
             {salePrice ? (
               <>
-                <span className="text-bloom-rose font-semibold text-sm">{formatPrice(salePrice)}</span>
-                <span className="text-taupe line-through text-xs">{formatPrice(price)}</span>
+                <span className="text-bloom-rose font-semibold text-sm">{fmt(salePrice)}</span>
+                <span className="text-taupe line-through text-xs">{fmt(price)}</span>
               </>
             ) : (
-              <span className="text-charcoal font-semibold text-sm">{formatPrice(price)}</span>
+              <span className="text-charcoal font-semibold text-sm">{fmt(price)}</span>
             )}
           </div>
         </div>
@@ -226,11 +230,11 @@ export function ProductCard({
         <div className="flex items-center gap-2">
           {salePrice ? (
             <>
-              <span className="text-bloom-rose font-bold text-base">{formatPrice(salePrice)}</span>
-              <span className="text-taupe line-through text-sm">{formatPrice(price)}</span>
+              <span className="text-bloom-rose font-bold text-base">{fmt(salePrice)}</span>
+              <span className="text-taupe line-through text-sm">{fmt(price)}</span>
             </>
           ) : (
-            <span className="text-charcoal font-bold text-base">{formatPrice(price)}</span>
+            <span className="text-charcoal font-bold text-base">{fmt(price)}</span>
           )}
         </div>
 

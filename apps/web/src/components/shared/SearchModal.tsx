@@ -1,11 +1,9 @@
 "use client";
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, X, Clock, ArrowRight } from "lucide-react";
 import { Modal } from "@reborn/ui";
-import { formatPrice } from "@/lib/utils";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 import { api } from "@/lib/api";
-
 interface SearchResult {
   id: string;
   name: string;
@@ -15,14 +13,11 @@ interface SearchResult {
   primaryImage?: string | null;
   category?: { name: string } | null;
 }
-
 interface SearchModalProps {
   open: boolean;
   onClose: () => void;
 }
-
 const RECENT_KEY = "reborn_recent_searches";
-
 export function SearchModal({ open, onClose }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -30,7 +25,6 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -43,7 +37,6 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
       setResults([]);
     }
   }, [open]);
-
   const doSearch = useCallback(async (q: string) => {
     if (q.length < 2) { setResults([]); return; }
     setLoading(true);
@@ -53,13 +46,11 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     } catch { setResults([]); }
     finally { setLoading(false); }
   }, []);
-
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => doSearch(query), 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, doSearch]);
-
   const handleSelect = (q: string) => {
     const updated = [q, ...recentSearches.filter((s) => s !== q)].slice(0, 5);
     localStorage.setItem(RECENT_KEY, JSON.stringify(updated));
@@ -67,12 +58,10 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     onClose();
     window.location.href = `/search?q=${encodeURIComponent(q)}`;
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) handleSelect(query.trim());
   };
-
   return (
     <Modal open={open} onClose={onClose} size="lg" showClose={false} className="!rounded-3xl">
       <div className="-m-6">
@@ -96,7 +85,6 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
             <span className="text-xs font-body border border-charcoal-200 rounded px-1.5 py-0.5">ESC</span>
           </button>
         </form>
-
         <div className="p-4 max-h-[60vh] overflow-y-auto">
           {/* Loading */}
           {loading && (
@@ -112,7 +100,6 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
               ))}
             </div>
           )}
-
           {/* Results */}
           {!loading && results.length > 0 && (
             <div>
@@ -149,7 +136,6 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
               </a>
             </div>
           )}
-
           {/* No results */}
           {!loading && query.length >= 2 && results.length === 0 && (
             <div className="py-8 text-center">
@@ -157,7 +143,6 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
               <p className="text-sm text-taupe font-body">Try different keywords or browse our collections.</p>
             </div>
           )}
-
           {/* Recent searches */}
           {!loading && query.length < 2 && recentSearches.length > 0 && (
             <div>
@@ -176,7 +161,6 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
               </div>
             </div>
           )}
-
           {/* Empty state */}
           {!loading && query.length < 2 && recentSearches.length === 0 && (
             <div className="py-8 text-center">

@@ -1,21 +1,19 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { Button, EmptyState } from "@reborn/ui";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCartStore } from "@/store/cartStore";
-import { formatPrice } from "@/lib/utils";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 import { toast } from "@/store/uiStore";
-
 export default function WishlistPage() {
   const { items, removeItem } = useWishlistStore();
+  const { formatPrice } = useFormatPrice();
   const { addItem } = useCartStore();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
-
   const moveToCart = (productId: string) => {
     const item = items.find((i) => i.productId === productId);
     if (!item) return;
@@ -24,14 +22,12 @@ export default function WishlistPage() {
     removeItem(productId);
     toast.success("Moved to cart", p.name);
   };
-
   return (
     <div className="min-h-screen bg-ivory py-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="font-heading text-display-sm text-charcoal mb-8">
           My Wishlist <span className="text-taupe text-xl">({items.length} item{items.length !== 1 ? "s" : ""})</span>
         </h1>
-
         {items.length === 0 ? (
           <EmptyState
             icon={<Heart />}

@@ -1,23 +1,20 @@
 "use client";
-
 import React from "react";
 import Link from "next/link";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import { Button, EmptyState } from "@reborn/ui";
 import { useCartStore, useCartSubtotal, useCartItemCount } from "@/store/cartStore";
-import { formatPrice } from "@/lib/utils";
-
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 const FREE_SHIPPING_THRESHOLD = 150;
 const SHIPPING_COST = 9.99;
-
 export default function CartPage() {
   const { items, removeItem, updateQuantity } = useCartStore();
+  const { formatPrice } = useFormatPrice();
   const subtotal = useCartSubtotal();
   const itemCount = useCartItemCount();
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total = subtotal + shippingCost;
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-ivory flex items-center justify-center">
@@ -33,14 +30,12 @@ export default function CartPage() {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-ivory py-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="font-heading text-display-sm text-charcoal mb-8">
           Shopping Cart <span className="text-taupe text-xl">({itemCount} item{itemCount !== 1 ? "s" : ""})</span>
         </h1>
-
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
           {/* Items */}
           <div className="space-y-4">
@@ -81,7 +76,6 @@ export default function CartPage() {
               </div>
             ))}
           </div>
-
           {/* Summary */}
           <div className="space-y-4">
             <div className="bg-white rounded-3xl p-6 border border-charcoal-100 sticky top-24">

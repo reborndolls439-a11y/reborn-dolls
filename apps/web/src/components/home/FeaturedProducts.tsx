@@ -7,6 +7,7 @@ import { ProductCard } from "@reborn/ui";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { toast } from "@/store/uiStore";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 import type { ProductSummary } from "@reborn/types";
 
 interface FeaturedProductsProps {
@@ -26,6 +27,7 @@ export function FeaturedProducts({
 }: FeaturedProductsProps) {
   const { addItem } = useCartStore();
   const { toggle, isWishlisted } = useWishlistStore();
+  const { formatPrice } = useFormatPrice();
 
   const handleAddToCart = (productId: string) => {
     const product = products.find((p) => p.id === productId);
@@ -80,6 +82,7 @@ export function FeaturedProducts({
             <ProductCard
               key={product.id}
               id={product.id}
+              priceFormatter={formatPrice}
               name={product.name}
               slug={product.slug}
               price={product.price}

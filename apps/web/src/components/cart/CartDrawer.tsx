@@ -1,19 +1,17 @@
 "use client";
-
 import React from "react";
 import Link from "next/link";
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import { Drawer, Button, EmptyState } from "@reborn/ui";
 import { useCartStore, useCartSubtotal, useCartItemCount } from "@/store/cartStore";
-import { formatPrice } from "@/lib/utils";
-
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 export function CartDrawer() {
   const { isOpen, closeCart, items, removeItem, updateQuantity } = useCartStore();
+  const { formatPrice } = useFormatPrice();
   const subtotal = useCartSubtotal();
   const itemCount = useCartItemCount();
   const FREE_SHIPPING = 150;
   const remaining = Math.max(0, FREE_SHIPPING - subtotal);
-
   return (
     <Drawer
       open={isOpen}

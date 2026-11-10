@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,41 +7,34 @@ import { Button, Input } from "@reborn/ui";
 import { useCartStore, useCartSubtotal } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
-import { formatPrice } from "@/lib/utils";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 import { toast } from "@/store/uiStore";
-
 type Step = "contact" | "shipping" | "review";
-
 interface CheckoutForm {
   email: string; firstName: string; lastName: string; phone: string;
   line1: string; line2: string; city: string; state: string; postalCode: string; country: string;
   notes: string;
 }
-
 const FREE_SHIPPING = 150;
 const SHIPPING_COST = 9.99;
-
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, clearCart } = useCartStore();
+  const { formatPrice } = useFormatPrice();
   const subtotal = useCartSubtotal();
   const { user } = useAuthStore();
   const [step, setStep] = useState<Step>("contact");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
   const shippingCost = subtotal >= FREE_SHIPPING ? 0 : SHIPPING_COST;
   const total = subtotal + shippingCost;
-
   const [form, setForm] = useState<CheckoutForm>({
     email: user?.email || "", firstName: user?.name?.split(" ")[0] || "",
     lastName: user?.name?.split(" ").slice(1).join(" ") || "",
     phone: "", line1: "", line2: "", city: "", state: "", postalCode: "", country: "US", notes: "",
   });
-
   const set = (k: keyof CheckoutForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
-
   const validateContact = () => {
     const e: Record<string, string> = {};
     if (!form.email) e.email = "Email is required.";
@@ -51,7 +43,6 @@ export default function CheckoutPage() {
     setErrors(e);
     return !Object.keys(e).length;
   };
-
   const validateShipping = () => {
     const e: Record<string, string> = {};
     if (!form.line1) e.line1 = "Address is required.";
@@ -61,12 +52,10 @@ export default function CheckoutPage() {
     setErrors(e);
     return !Object.keys(e).length;
   };
-
   const handleNext = () => {
     if (step === "contact" && validateContact()) setStep("shipping");
     else if (step === "shipping" && validateShipping()) setStep("review");
   };
-
   const handlePlaceOrder = async () => {
     setLoading(true);
     try {
@@ -91,7 +80,6 @@ export default function CheckoutPage() {
       setLoading(false);
     }
   };
-
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-ivory flex items-center justify-center">
@@ -102,7 +90,6 @@ export default function CheckoutPage() {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-ivory">
       <div className="max-w-5xl mx-auto px-4 py-10 sm:px-6">
@@ -125,7 +112,6 @@ export default function CheckoutPage() {
             ))}
           </div>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
           {/* Form */}
           <div className="bg-white rounded-3xl p-6 border border-charcoal-100">
@@ -141,7 +127,6 @@ export default function CheckoutPage() {
                 <Button variant="primary" size="lg" className="w-full" rightIcon={<ArrowRight className="w-4 h-4" />} onClick={handleNext}>Continue to Shipping</Button>
               </div>
             )}
-
             {step === "shipping" && (
               <div className="space-y-4">
                 <h2 className="font-heading text-xl font-semibold text-charcoal">Shipping Address</h2>
@@ -161,7 +146,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
             )}
-
             {step === "review" && (
               <div className="space-y-6">
                 <h2 className="font-heading text-xl font-semibold text-charcoal">Review Your Order</h2>
@@ -178,7 +162,6 @@ export default function CheckoutPage() {
                     <p className="text-taupe">{form.country}</p>
                   </div>
                 </div>
-
                 <div className="bg-bloom-rose-50 rounded-2xl p-5 border border-bloom-rose-200">
                   <div className="flex items-center gap-2 mb-3">
                     <ShieldCheck className="w-4 h-4 text-bloom-rose" />
@@ -188,7 +171,6 @@ export default function CheckoutPage() {
                     After you place your order, we'll contact you via email to arrange payment and confirm all details before fulfillment. Your order is not charged automatically.
                   </p>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-charcoal font-body mb-1.5">Order Notes (optional)</label>
                   <textarea
@@ -199,7 +181,6 @@ export default function CheckoutPage() {
                     className="w-full px-4 py-3 rounded-xl border border-charcoal-200 text-sm font-body focus:outline-none focus:border-bloom-rose resize-none"
                   />
                 </div>
-
                 <div className="flex gap-3">
                   <Button variant="outline" size="lg" leftIcon={<ArrowLeft className="w-4 h-4" />} onClick={() => setStep("shipping")}>Back</Button>
                   <Button variant="primary" size="lg" className="flex-1" loading={loading} onClick={handlePlaceOrder}>
@@ -209,7 +190,6 @@ export default function CheckoutPage() {
               </div>
             )}
           </div>
-
           {/* Order summary */}
           <div className="space-y-4">
             <div className="bg-white rounded-3xl p-5 border border-charcoal-100">

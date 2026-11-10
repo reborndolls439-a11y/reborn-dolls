@@ -1,41 +1,35 @@
 "use client";
-
 import React, { useState } from "react";
 import { Heart, ShoppingCart, Share2, Minus, Plus } from "lucide-react";
 import { Button, Badge } from "@reborn/ui";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { toast } from "@/store/uiStore";
-import { formatPrice, getDiscountPercentage } from "@/lib/utils";
+import {  getDiscountPercentage } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Product } from "@reborn/types";
-
 interface ProductActionsProps {
   product: Product & { averageRating?: number | null; reviewCount?: number };
 }
-
 export function ProductActions({ product }: ProductActionsProps) {
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCartStore();
+  const { formatPrice } = useFormatPrice();
   const { toggle, isWishlisted } = useWishlistStore();
   const wishlisted = isWishlisted(product.id);
-
   const isSoldOut = product.stockQuantity === 0;
   const isLowStock = product.stockQuantity > 0 && product.stockQuantity <= 5;
   const discount = product.salePrice ? getDiscountPercentage(product.price, product.salePrice) : null;
   const effectivePrice = product.salePrice ?? product.price;
-
   const handleAddToCart = () => {
     if (isSoldOut) return;
     addItem({ productId: product.id, name: product.name, price: product.price, salePrice: product.salePrice, image: product.images[0]?.url ?? null, slug: product.slug, quantity, stockQuantity: product.stockQuantity });
     toast.success("Added to cart!", `${quantity}× ${product.name}`);
   };
-
   const handleBuyNow = () => {
     handleAddToCart();
     window.location.href = "/cart";
   };
-
   const handleShare = async () => {
     try {
       await navigator.share({ title: product.name, url: window.location.href });
@@ -44,7 +38,6 @@ export function ProductActions({ product }: ProductActionsProps) {
       toast.info("Link copied to clipboard");
     }
   };
-
   return (
     <div className="space-y-6">
       {/* Price */}
@@ -59,7 +52,6 @@ export function ProductActions({ product }: ProductActionsProps) {
           </>
         )}
       </div>
-
       {/* Stock status */}
       {isSoldOut ? (
         <div className="flex items-center gap-2">
@@ -77,7 +69,6 @@ export function ProductActions({ product }: ProductActionsProps) {
           <span className="text-sm text-green-700 font-body">In stock and ready to ship</span>
         </div>
       )}
-
       {/* Quantity */}
       {!isSoldOut && (
         <div className="flex items-center gap-4">
@@ -101,7 +92,6 @@ export function ProductActions({ product }: ProductActionsProps) {
           </div>
         </div>
       )}
-
       {/* CTA buttons */}
       <div className="flex flex-col sm:flex-row gap-3">
         <Button
@@ -120,7 +110,6 @@ export function ProductActions({ product }: ProductActionsProps) {
           </Button>
         )}
       </div>
-
       {/* Secondary actions */}
       <div className="flex items-center gap-4 pt-2">
         <button
@@ -135,7 +124,6 @@ export function ProductActions({ product }: ProductActionsProps) {
           Share
         </button>
       </div>
-
       {/* Trust micro-copy */}
       <div className="grid grid-cols-2 gap-3 pt-2 border-t border-charcoal-100">
         {[

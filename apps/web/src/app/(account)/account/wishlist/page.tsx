@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Heart, Trash2, ShoppingCart } from "lucide-react";
@@ -7,16 +6,14 @@ import { Button, EmptyState } from "@reborn/ui";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCartStore } from "@/store/cartStore";
 import { toast } from "@/store/uiStore";
-import { formatPrice } from "@/lib/utils";
-
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 export default function WishlistPage() {
   const { items, removeItem } = useWishlistStore();
+  const { formatPrice } = useFormatPrice();
   const { addItem } = useCartStore();
   const [mounted, setMounted] = useState(false);
-
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
-
   const moveToCart = (productId: string) => {
     const item = items.find((i) => i.productId === productId);
     if (!item) return;
@@ -25,7 +22,6 @@ export default function WishlistPage() {
     removeItem(productId);
     toast.success("Moved to cart", p.name);
   };
-
   return (
     <div className="space-y-4">
       <h1 className="font-heading text-2xl font-bold text-charcoal">My Wishlist</h1>

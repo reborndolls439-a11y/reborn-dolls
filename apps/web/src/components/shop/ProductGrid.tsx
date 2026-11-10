@@ -5,6 +5,7 @@ import { ProductCard, ProductCardSkeleton } from "@reborn/ui";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { toast } from "@/store/uiStore";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 import type { ProductSummary } from "@reborn/types";
 import { EmptyState } from "@reborn/ui";
 import { Search } from "lucide-react";
@@ -18,6 +19,7 @@ interface ProductGridProps {
 export function ProductGrid({ products, loading = false, skeletonCount = 12 }: ProductGridProps) {
   const { addItem } = useCartStore();
   const { toggle, isWishlisted } = useWishlistStore();
+  const { formatPrice } = useFormatPrice();
 
   const handleAddToCart = (productId: string) => {
     const p = products.find((x) => x.id === productId);
@@ -61,6 +63,7 @@ export function ProductGrid({ products, loading = false, skeletonCount = 12 }: P
         <ProductCard
           key={p.id}
           id={p.id}
+          priceFormatter={formatPrice}
           name={p.name}
           slug={p.slug}
           price={p.price}
