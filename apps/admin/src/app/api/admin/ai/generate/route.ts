@@ -91,17 +91,30 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { field, context } = body as { field: GenerateField; context: ProductContext };
+    const { field, context, customPrompt, maxTokens } = body as {
+      field: GenerateField | "custom";
+      context: ProductContext;
+      customPrompt?: string;
+      maxTokens?: number;
+    };
 
-    if (!field || !context?.name) {
-      return NextResponse.json({ error: "field and context.name are required." }, { status: 400 });
+    if (!field) {
+      return NextResponse.json({ error: "field is required." }, { status: 400 });
     }
 
-    if (!prompts[field]) {
-      return NextResponse.json({ error: `Unknown field: ${field}` }, { status: 400 });
+    // Allow custom prompts for blog post generation
+    let prompt: string;
+    if (field === "custom" && customPrompt) {
+      prompt = customPrompt;
+    } else {
+      if (!context?.name) {
+        return NextResponse.json({ error: "context.name is required." }, { status: 400 });
+      }
+      if (!prompts[field as GenerateField]) {
+        return NextResponse.json({ error: `Unknown field: ${field}` }, { status: 400 });
+      }
+      prompt = prompts[field as GenerateField](context);
     }
-
-    const prompt = prompts[field](context);
 
     // Use plain fetch to Groq API (avoids SDK bundling issues on Vercel)
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -114,7 +127,7 @@ export async function POST(request: NextRequest) {
         model: "openai/gpt-oss-20b",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
-        max_tokens: 4096,
+        max_tokens: maxTokens || 4096,
       }),
     });
 

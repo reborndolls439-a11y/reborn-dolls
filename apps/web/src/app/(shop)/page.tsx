@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 async function getHomepageData() {
-  const [featuredProducts, newArrivals, blogPosts, categories, heroSetting] = await Promise.all([
+  const [featuredProducts, newArrivals, blogPosts, categories, heroSetting, storySettings] = await Promise.all([
     // Featured products for the grid
     prisma.product.findMany({
       where: { status: "PUBLISHED", isFeatured: true },
@@ -63,6 +63,8 @@ async function getHomepageData() {
     }),
     // Admin-selected hero product IDs from store settings
     prisma.storeSetting.findUnique({ where: { key: "hero_product_ids" } }),
+    // Story section images
+    prisma.storeSetting.findMany({ where: { key: { in: ["story_image_1", "story_image_2"] } } }),
   ]);
 
   const mapProduct = (p: typeof featuredProducts[0]): ProductSummary => ({
@@ -118,17 +120,24 @@ async function getHomepageData() {
     }
   }
 
+  // Extract story images from settings
+  const storyMap = Object.fromEntries((storySettings || []).map((s: { key: string; value: string }) => [s.key, s.value]));
+  const storyImage1 = storyMap.story_image_1 || undefined;
+  const storyImage2 = storyMap.story_image_2 || undefined;
+
   return {
     featuredProducts: featuredProducts.map(mapProduct),
     newArrivals: newArrivals.map(mapProduct),
     blogPosts,
     categories,
     heroImages,
+    storyImage1,
+    storyImage2,
   };
 }
 
 export default async function HomePage() {
-  const { featuredProducts, newArrivals, blogPosts, categories, heroImages } = await getHomepageData();
+  const { featuredProducts, newArrivals, blogPosts, categories, heroImages, storyImage1, storyImage2 } = await getHomepageData();
 
   return (
     <>
@@ -144,7 +153,7 @@ export default async function HomePage() {
         viewAllHref="/shop?badge=FEATURED"
         viewAllLabel="View All Featured"
       />
-      <StorySection />
+      <StorySection image1={storyImage1} image2={storyImage2} />
       {newArrivals.length > 0 && (
         <FeaturedProducts
           products={newArrivals}

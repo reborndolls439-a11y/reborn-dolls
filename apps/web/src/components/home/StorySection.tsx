@@ -2,7 +2,9 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-export function StorySection() {
+export function StorySection({ image1, image2 }: { image1?: string; image2?: string }) {
+  const img1 = image1 || "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=500&q=80";
+  const img2 = image2 || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80";
   return (
     <section className="py-20 bg-soft-blush-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11,20 +13,10 @@ export function StorySection() {
           <div className="relative">
             <div className="grid grid-cols-2 gap-4">
               <div className="aspect-[3/4] rounded-3xl overflow-hidden shadow-elevated">
-                <img
-                  src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=500&q=80"
-                  alt="Craftsmanship detail"
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
+                <img src={img1} alt="Craftsmanship detail" className="w-full h-full object-cover" loading="lazy" />
               </div>
               <div className="aspect-[3/4] rounded-3xl overflow-hidden shadow-card mt-8">
-                <img
-                  src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80"
-                  alt="Doll artistry"
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
+                <img src={img2} alt="Doll artistry" className="w-full h-full object-cover" loading="lazy" />
               </div>
             </div>
             {/* Badge */}

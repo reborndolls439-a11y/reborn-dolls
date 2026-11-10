@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Save, Store, Mail, Truck, ImageIcon, X, GripVertical, CheckCircle2 } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Save, Store, Mail, Truck, ImageIcon, X, GripVertical, CheckCircle2, Upload, Loader2 } from "lucide-react";
 import { Button, Input } from "@reborn/ui";
 
 interface Settings {
@@ -23,6 +23,14 @@ export default function SettingsPage() {
   });
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Story section images
+  const [storyImage1, setStoryImage1] = useState("");
+  const [storyImage2, setStoryImage2] = useState("");
+  const [uploadingStory, setUploadingStory] = useState<1 | 2 | null>(null);
+  const [storySaved, setStorySaved] = useState(false);
+  const storyRef1 = useRef<HTMLInputElement>(null);
+  const storyRef2 = useRef<HTMLInputElement>(null);
 
   // Hero product picker state
   const [products, setProducts] = useState<ProductOption[]>([]);
