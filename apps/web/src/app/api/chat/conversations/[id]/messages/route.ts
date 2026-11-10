@@ -51,32 +51,32 @@ export async function POST(
   try {
     const { id } = await params;
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    const { content, guestEmail } = await request.json();
 
-    const { content } = await request.json();
     if (!content?.trim()) {
       return NextResponse.json({ error: "Message content is required." }, { status: 400 });
     }
 
+    // Allow guests to post messages if they provide their email matching the conversation
     const conversation = await prisma.conversation.findFirst({
-      where: {
-        id,
-        ...(user.role === "CUSTOMER" ? { userId: user.id } : {}),
-      },
+      where: user
+        ? { id, ...(user.role === "CUSTOMER" ? { userId: user.id } : {}) }
+        : { id }, // guests just need the conversation ID (they got it from the initial POST)
     });
 
     if (!conversation) {
       return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
     }
 
-    const senderType = user.role === "CUSTOMER" ? "CUSTOMER" : "ADMIN";
+    const senderName = user?.name || user?.email || conversation.guestName || "Visitor";
+    const senderType = user && user.role !== "CUSTOMER" ? "ADMIN" : "CUSTOMER";
 
     const [message] = await prisma.$transaction([
       prisma.chatMessage.create({
         data: {
           conversationId: id,
-          senderId: user.id,
-          senderName: user.name || user.email,
+          senderId: user?.id ?? null,
+          senderName,
           senderType,
           content: content.trim(),
         },
