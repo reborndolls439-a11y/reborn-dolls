@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@reborn/db";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories, blogPosts] = await Promise.all([
