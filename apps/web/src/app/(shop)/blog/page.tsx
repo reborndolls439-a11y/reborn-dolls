@@ -5,7 +5,7 @@ import { formatDate } from "@/lib/utils";
 import { Clock } from "lucide-react";
 
 export const metadata: Metadata = { title: "Blog | Collecting Guides & Stories", description: "Discover care guides, collecting tips, and behind-the-scenes stories from Reborn Dolls." };
-export const revalidate = 3600;
+export const revalidate = 300; // 5 minutes — fast enough for blog updates
 
 export default async function BlogPage() {
   const posts = await prisma.blogPost.findMany({

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@reborn/db";
 import { formatDate } from "@/lib/utils";
+
+export const revalidate = 0; // Always fetch fresh — edits show immediately
 import { Clock, ArrowLeft } from "lucide-react";
 
 interface Props { params: Promise<{ slug: string }> }
