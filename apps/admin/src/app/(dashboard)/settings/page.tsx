@@ -41,7 +41,6 @@ export default function SettingsPage() {
 
   // Load settings + products
   useEffect(() => {
-    // Load store settings
     fetch("/api/admin/settings")
       .then((r) => r.json())
       .then((d) => {
@@ -50,21 +49,55 @@ export default function SettingsPage() {
           if (d.settings.hero_product_ids) {
             try { setHeroIds(JSON.parse(d.settings.hero_product_ids)); } catch { /* ignore */ }
           }
+          if (d.settings.story_image_1) setStoryImage1(d.settings.story_image_1);
+          if (d.settings.story_image_2) setStoryImage2(d.settings.story_image_2);
         }
       });
-
-    // Load all published products for the picker
     fetch("/api/admin/products?status=PUBLISHED&limit=100")
       .then((r) => r.json())
       .then((d) => {
         const list = d.products || d.data || [];
         setProducts(list.map((p: { id: string; name: string; images?: { url: string }[] }) => ({
-          id: p.id,
-          name: p.name,
-          image: p.images?.[0]?.url ?? null,
+          id: p.id, name: p.name, image: p.images?.[0]?.url ?? null,
         })));
       });
   }, []);
+
+  const uploadStoryImage = async (slot: 1 | 2, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    setUploadingStory(slot);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file: base64, folder: "reborn-dolls/story" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        const key = slot === 1 ? "story_image_1" : "story_image_2";
+        slot === 1 ? setStoryImage1(data.url) : setStoryImage2(data.url);
+        await fetch("/api/admin/settings", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [key]: data.url }),
+        });
+        setStorySaved(true);
+        setTimeout(() => setStorySaved(false), 2000);
+      }
+    } catch { /* ignore */ }
+    finally {
+      setUploadingStory(null);
+      if (slot === 1 && storyRef1.current) storyRef1.current.value = "";
+      if (slot === 2 && storyRef2.current) storyRef2.current.value = "";
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +167,43 @@ export default function SettingsPage() {
       </div>
 
       <div className="p-6 max-w-2xl space-y-6">
+
+        {/* ── STORY SECTION IMAGES ─────────────────────────────────────── */}
+        <div className="bg-white rounded-2xl border border-charcoal-100 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-base font-semibold text-charcoal flex items-center gap-2">
+              <Upload className="w-4 h-4 text-bloom-rose" /> &quot;Our Craft&quot; Section Images
+            </h2>
+            {storySaved && <span className="flex items-center gap-1 text-xs text-green-600 font-body"><CheckCircle2 className="w-3.5 h-3.5" /> Saved</span>}
+          </div>
+          <p className="text-xs text-taupe font-body">Upload the two images shown in the &quot;Our Craft&quot; section on the homepage.</p>
+          <div className="grid grid-cols-2 gap-4">
+            {([1, 2] as const).map((slot) => {
+              const img = slot === 1 ? storyImage1 : storyImage2;
+              const ref = slot === 1 ? storyRef1 : storyRef2;
+              return (
+                <div key={slot}>
+                  <p className="text-xs font-medium text-charcoal font-body mb-1.5">Image {slot}</p>
+                  <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-soft-blush-100 border border-charcoal-200">
+                    {img
+                      ? <img src={img} alt={`Story ${slot}`} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-8 h-8 text-taupe-300" /></div>}
+                    <button
+                      type="button"
+                      onClick={() => ref.current?.click()}
+                      disabled={uploadingStory === slot}
+                      className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40 opacity-0 hover:opacity-100 transition-opacity text-white"
+                    >
+                      {uploadingStory === slot ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                      <span className="text-xs font-body">{uploadingStory === slot ? "Uploading…" : "Upload"}</span>
+                    </button>
+                  </div>
+                  <input ref={ref} type="file" accept="image/*" className="hidden" onChange={(e) => uploadStoryImage(slot, e)} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {/* ── HERO IMAGE PICKER ───────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-charcoal-100 p-6 space-y-4">
