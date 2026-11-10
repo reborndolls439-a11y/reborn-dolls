@@ -2,43 +2,70 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 
-export function HeroSection() {
+interface HeroImage {
+  url: string;
+  alt: string;
+}
+
+interface HeroSectionProps {
+  images?: HeroImage[];
+}
+
+// Fallback images shown when no products exist yet
+const FALLBACK_IMAGES: HeroImage[] = [
+  { url: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=600&q=80", alt: "Featured reborn doll" },
+  { url: "https://images.unsplash.com/photo-1566140967404-b8b3932483f5?w=400&q=80", alt: "Doll detail" },
+  { url: "https://images.unsplash.com/photo-1548690312-e3b507d8c110?w=400&q=80", alt: "Silicone doll" },
+  { url: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&q=80", alt: "Toddler doll" },
+];
+
+export function HeroSection({ images }: HeroSectionProps) {
+  const displayImages = (images && images.length >= 4 ? images.slice(0, 4) : FALLBACK_IMAGES);
+
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-hero">
-      {/* Decorative blobs */}
-      <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-bloom-rose-100/40 blur-3xl pointer-events-none" aria-hidden="true" />
-      <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] rounded-full bg-sage-100/30 blur-3xl pointer-events-none" aria-hidden="true" />
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[var(--bg)]">
+      {/* Teal glow blobs — visible in both themes */}
+      <div
+        className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none opacity-20"
+        style={{ background: "radial-gradient(circle, #2FE6DE 0%, transparent 70%)" }}
+        aria-hidden="true"
+      />
+      <div
+        className="absolute -bottom-20 -left-20 w-[400px] h-[400px] rounded-full blur-3xl pointer-events-none opacity-10"
+        style={{ background: "radial-gradient(circle, #2FE6DE 0%, transparent 70%)" }}
+        aria-hidden="true"
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Text */}
           <div className="animate-fade-in">
-            <div className="inline-flex items-center gap-2 bg-white border border-bloom-rose-200 text-bloom-rose text-xs font-semibold px-4 py-2 rounded-full mb-6 shadow-soft font-body">
+            <div className="inline-flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--primary)] text-[var(--primary)] text-xs font-semibold px-4 py-2 rounded-full mb-6 shadow-soft font-body">
               <Sparkles className="w-3.5 h-3.5" />
               New arrivals just landed
             </div>
 
-            <h1 className="font-heading text-display-md lg:text-display-lg text-charcoal mb-6 leading-[1.1]">
+            <h1 className="font-heading text-display-md lg:text-display-lg text-[var(--fg)] mb-6 leading-[1.1]">
               Discover Art
               <br />
-              <span className="text-bloom-rose italic">That Feels Alive.</span>
+              <span className="text-[var(--primary)] italic">That Feels Alive.</span>
             </h1>
 
-            <p className="text-lg text-taupe font-body leading-relaxed mb-10 max-w-md">
+            <p className="text-lg text-[var(--fg-muted)] font-body leading-relaxed mb-10 max-w-md">
               Each doll in our collection is a masterwork, hand-crafted, thoughtfully presented, and ready to be cherished. Find your perfect piece today.
             </p>
 
             <div className="flex flex-wrap gap-4">
               <Link
                 href="/shop"
-                className="inline-flex items-center gap-2 h-14 px-8 bg-bloom-rose text-white font-semibold rounded-full hover:bg-bloom-rose-600 transition-all duration-200 shadow-soft hover:shadow-md font-body text-base"
+                className="inline-flex items-center gap-2 h-14 px-8 bg-[var(--primary)] text-[var(--primary-text)] font-semibold rounded-full hover:opacity-90 transition-all duration-200 shadow-soft hover:shadow-md font-body text-base"
               >
                 Shop the Collection
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
                 href="/new-arrivals"
-                className="inline-flex items-center gap-2 h-14 px-8 bg-white text-charcoal font-semibold rounded-full border border-charcoal-200 hover:border-bloom-rose hover:text-bloom-rose transition-all duration-200 font-body text-base"
+                className="inline-flex items-center gap-2 h-14 px-8 bg-[var(--bg-card)] text-[var(--fg)] font-semibold rounded-full border border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all duration-200 font-body text-base"
               >
                 New Arrivals
               </Link>
@@ -49,64 +76,64 @@ export function HeroSection() {
               {[
                 { label: "Hand-Crafted", sub: "Every piece" },
                 { label: "Secure Shopping", sub: "100% safe" },
-                { label: "Free Shipping", sub: "Orders over $150" },
+                { label: "Free UK Shipping", sub: "Orders over £150" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-bloom-rose-50 border border-bloom-rose-200 flex items-center justify-center shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-bloom-rose" />
+                  <div className="w-8 h-8 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                    <div className="w-2 h-2 rounded-full bg-[var(--primary)]" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-charcoal font-body">{item.label}</p>
-                    <p className="text-xs text-taupe font-body">{item.sub}</p>
+                    <p className="text-xs font-semibold text-[var(--fg)] font-body">{item.label}</p>
+                    <p className="text-xs text-[var(--fg-subtle)] font-body">{item.sub}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Hero image grid */}
+          {/* Hero image grid — populated from real products */}
           <div className="relative hidden lg:grid grid-cols-2 gap-4 animate-slide-up">
             <div className="space-y-4">
-              <div className="aspect-[3/4] rounded-3xl overflow-hidden shadow-elevated">
+              <div className="aspect-[3/4] rounded-3xl overflow-hidden shadow-elevated ring-1 ring-[var(--border)]">
                 <img
-                  src="https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=600&q=80"
-                  alt="Featured reborn doll"
+                  src={displayImages[0].url}
+                  alt={displayImages[0].alt}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />
               </div>
-              <div className="aspect-square rounded-3xl overflow-hidden shadow-card">
+              <div className="aspect-square rounded-3xl overflow-hidden shadow-card ring-1 ring-[var(--border)]">
                 <img
-                  src="https://images.unsplash.com/photo-1566140967404-b8b3932483f5?w=400&q=80"
-                  alt="Doll detail"
+                  src={displayImages[1].url}
+                  alt={displayImages[1].alt}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />
               </div>
             </div>
             <div className="space-y-4 pt-8">
-              <div className="aspect-square rounded-3xl overflow-hidden shadow-card">
+              <div className="aspect-square rounded-3xl overflow-hidden shadow-card ring-1 ring-[var(--border)]">
                 <img
-                  src="https://images.unsplash.com/photo-1548690312-e3b507d8c110?w=400&q=80"
-                  alt="Silicone doll"
+                  src={displayImages[2].url}
+                  alt={displayImages[2].alt}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />
               </div>
-              <div className="aspect-[3/4] rounded-3xl overflow-hidden shadow-elevated">
+              <div className="aspect-[3/4] rounded-3xl overflow-hidden shadow-elevated ring-1 ring-[var(--border)]">
                 <img
-                  src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&q=80"
-                  alt="Toddler doll"
+                  src={displayImages[3].url}
+                  alt={displayImages[3].alt}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />
               </div>
             </div>
 
             {/* Floating card */}
-            <div className="absolute -bottom-4 -left-6 bg-white rounded-2xl shadow-elevated px-5 py-4 flex items-center gap-3 border border-charcoal-100">
-              <div className="w-10 h-10 rounded-full bg-sage-100 flex items-center justify-center shrink-0">
-                <span className="text-sage text-lg">★</span>
+            <div className="absolute -bottom-4 -left-6 bg-[var(--bg-card)] rounded-2xl shadow-elevated px-5 py-4 flex items-center gap-3 border border-[var(--border)]">
+              <div className="w-10 h-10 rounded-full bg-[var(--surface)] flex items-center justify-center shrink-0">
+                <span className="text-[var(--primary)] text-lg">★</span>
               </div>
               <div>
-                <p className="text-xs font-semibold text-charcoal font-body">Loved by collectors</p>
-                <p className="text-xs text-taupe font-body">5,000+ happy customers</p>
+                <p className="text-xs font-semibold text-[var(--fg)] font-body">Loved by collectors</p>
+                <p className="text-xs text-[var(--fg-muted)] font-body">5,000+ happy customers</p>
               </div>
             </div>
           </div>

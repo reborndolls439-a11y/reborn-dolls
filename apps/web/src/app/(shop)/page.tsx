@@ -17,10 +17,11 @@ export const metadata: Metadata = {
     "Discover our exquisitely crafted reborn dolls and collectibles. Premium lifelike dolls, silicone dolls, and accessories, all carefully curated and beautifully presented.",
 };
 
-export const revalidate = 3600; // revalidate every hour
+export const revalidate = 3600;
 
 async function getHomepageData() {
-  const [featuredProducts, newArrivals, blogPosts] = await Promise.all([
+  const [featuredProducts, newArrivals, blogPosts, categories, heroProducts] = await Promise.all([
+    // Featured products for the grid
     prisma.product.findMany({
       where: { status: "PUBLISHED", isFeatured: true },
       take: 8,
@@ -32,6 +33,7 @@ async function getHomepageData() {
         category: { select: { name: true, slug: true } },
       },
     }),
+    // New arrivals grid
     prisma.product.findMany({
       where: { status: "PUBLISHED", isNewArrival: true },
       take: 4,
@@ -43,6 +45,7 @@ async function getHomepageData() {
         category: { select: { name: true, slug: true } },
       },
     }),
+    // Blog posts preview
     prisma.blogPost.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
@@ -52,37 +55,56 @@ async function getHomepageData() {
         featuredImage: true, author: true, publishedAt: true, tags: true,
       },
     }),
+    // All active categories (with their images from admin)
+    prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+      select: { name: true, slug: true, image: true, description: true },
+    }),
+    // 4 published products with images for the hero grid
+    prisma.product.findMany({
+      where: { status: "PUBLISHED" },
+      take: 4,
+      orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
+      select: {
+        name: true,
+        images: { where: { isPrimary: true }, select: { url: true }, take: 1 },
+      },
+    }),
   ]);
 
   const mapProduct = (p: typeof featuredProducts[0]): ProductSummary => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    price: parseDecimal(p.price),
-    salePrice: p.salePrice ? parseDecimal(p.salePrice) : null,
-    badge: p.badge,
-    isFeatured: p.isFeatured,
-    isNewArrival: p.isNewArrival,
-    stockQuantity: p.stockQuantity,
-    primaryImage: p.images[0]?.url ?? null,
+    id: p.id, name: p.name, slug: p.slug,
+    price: parseDecimal(p.price), salePrice: p.salePrice ? parseDecimal(p.salePrice) : null,
+    badge: p.badge, isFeatured: p.isFeatured, isNewArrival: p.isNewArrival,
+    stockQuantity: p.stockQuantity, primaryImage: p.images[0]?.url ?? null,
     category: p.category,
   });
+
+  // Build hero images from real products (only include those with an image)
+  const heroImages = heroProducts
+    .filter((p) => p.images[0]?.url)
+    .map((p) => ({ url: p.images[0].url, alt: p.name }));
 
   return {
     featuredProducts: featuredProducts.map(mapProduct),
     newArrivals: newArrivals.map(mapProduct),
     blogPosts,
+    categories,
+    heroImages,
   };
 }
 
 export default async function HomePage() {
-  const { featuredProducts, newArrivals, blogPosts } = await getHomepageData();
+  const { featuredProducts, newArrivals, blogPosts, categories, heroImages } = await getHomepageData();
 
   return (
     <>
-      <HeroSection />
+      {/* Hero: uses real product images if available, else falls back to stock photos */}
+      <HeroSection images={heroImages.length >= 4 ? heroImages : undefined} />
       <TrustBar />
-      <CategorySection />
+      {/* Category section: uses real categories and images from admin */}
+      <CategorySection categories={categories} />
       <FeaturedProducts
         products={featuredProducts}
         title="Featured Collection"
