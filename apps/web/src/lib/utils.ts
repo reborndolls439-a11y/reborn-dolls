@@ -1,12 +1,17 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { Currency } from "@/store/currencyStore";
+import { RATES, SYMBOLS } from "@/store/currencyStore";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(amount: number, currency = "GBP"): string {
-  return new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(amount);
+// Server-side default (GBP). Client components should use formatPriceClient from the hook.
+export function formatPrice(amount: number, currency: Currency = "GBP"): string {
+  const converted = amount * RATES[currency];
+  const locale = currency === "USD" ? "en-US" : currency === "EUR" ? "de-DE" : "en-GB";
+  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(converted);
 }
 
 export function formatDate(date: Date | string): string {

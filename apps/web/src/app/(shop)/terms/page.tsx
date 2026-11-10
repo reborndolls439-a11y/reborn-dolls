@@ -15,9 +15,9 @@ export default function TermsPage() {
         <h2>Products & Pricing</h2>
         <p>All prices are in USD and subject to change without notice. We reserve the right to limit quantities and refuse orders at our discretion.</p>
         <h2>Intellectual Property</h2>
-        <p>All content on this website, including images, text, and design, is owned by Reborn Dolls. You may not reproduce or distribute it without written permission.</p>
+        <p>All content on this website, including images, text, and design, is owned by UK UK Reborn Dolls. You may not reproduce or distribute it without written permission.</p>
         <h2>Limitation of Liability</h2>
-        <p>Reborn Dolls is not liable for any indirect, incidental, or consequential damages arising from use of the website or products.</p>
+        <p>UK UK Reborn Dolls is not liable for any indirect, incidental, or consequential damages arising from use of the website or products.</p>
         <h2>Governing Law</h2>
         <p>These terms are governed by the laws of the United States. Disputes will be resolved through binding arbitration.</p>
         <h2>Contact</h2>

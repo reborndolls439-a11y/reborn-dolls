@@ -6,7 +6,7 @@ import type { ProductSummary, PaginationMeta } from "@reborn/types";
 
 export const metadata: Metadata = {
   title: "Shop All Products",
-  description: "Browse our full collection of premium reborn dolls, silicone dolls, cuddle babies, and accessories.",
+  description: "Browse our full collection of premium UK UK Reborn Dolls, silicone dolls, cuddle babies, and accessories.",
 };
 
 interface SearchParams { category?: string; badge?: string; minPrice?: string; maxPrice?: string; inStock?: string; sort?: string; page?: string; }

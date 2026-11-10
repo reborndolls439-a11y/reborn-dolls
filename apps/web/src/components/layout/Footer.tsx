@@ -7,7 +7,7 @@ import { Instagram, Facebook, Mail } from "lucide-react";
 const shopLinks = [
   { label: "All Products", href: "/shop" },
   { label: "New Arrivals", href: "/new-arrivals" },
-  { label: "Reborn Dolls", href: "/collections/reborn-dolls" },
+  { label: "UK UK Reborn Dolls", href: "/collections/reborn-dolls" },
   { label: "Silicone Dolls", href: "/collections/silicone-dolls" },
   { label: "Limited Edition", href: "/collections/limited-edition" },
   { label: "Accessories", href: "/collections/accessories" },
@@ -75,7 +75,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-white/60 text-sm font-body leading-relaxed mb-6 max-w-xs">
-              Premium hand-crafted reborn dolls and collectibles. Each piece is a work of art, thoughtfully curated and carefully presented.
+              Premium hand-crafted UK UK Reborn Dolls and collectibles. Each piece is a work of art, thoughtfully curated and carefully presented.
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -175,7 +175,7 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-white/40 font-body">
-            © {new Date().getFullYear()} Reborn Dolls. All rights reserved.
+            © {new Date().getFullYear()} UK UK Reborn Dolls. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <Link href="/privacy-policy" className="text-xs text-white/40 hover:text-white/70 transition-colors font-body">

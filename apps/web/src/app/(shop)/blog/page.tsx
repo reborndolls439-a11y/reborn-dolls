@@ -4,7 +4,7 @@ import { prisma } from "@reborn/db";
 import { formatDate } from "@/lib/utils";
 import { Clock } from "lucide-react";
 
-export const metadata: Metadata = { title: "Blog | Collecting Guides & Stories", description: "Discover care guides, collecting tips, and behind-the-scenes stories from Reborn Dolls." };
+export const metadata: Metadata = { title: "Blog | Collecting Guides & Stories", description: "Discover care guides, collecting tips, and behind-the-scenes stories from UK UK Reborn Dolls." };
 export const revalidate = 300; // 5 minutes — fast enough for blog updates
 
 export default async function BlogPage() {

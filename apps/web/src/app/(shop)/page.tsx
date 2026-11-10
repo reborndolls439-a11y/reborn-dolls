@@ -12,15 +12,15 @@ import { NewsletterSection } from "@/components/home/NewsletterSection";
 import type { ProductSummary } from "@reborn/types";
 
 export const metadata: Metadata = {
-  title: "Reborn Dolls | Where Artistry Comes to Life",
+  title: "UK UK Reborn Dolls | Where Artistry Comes to Life",
   description:
-    "Discover our exquisitely crafted reborn dolls and collectibles. Premium lifelike dolls, silicone dolls, and accessories, all carefully curated and beautifully presented.",
+    "Discover our exquisitely crafted UK UK Reborn Dolls and collectibles. Premium lifelike dolls, silicone dolls, and accessories, all carefully curated and beautifully presented.",
 };
 
 export const revalidate = 3600;
 
 async function getHomepageData() {
-  const [featuredProducts, newArrivals, blogPosts, categories, heroSetting, storySettings] = await Promise.all([
+  const [featuredProducts, newArrivals, blogPosts, categories, heroSetting, storySettings, contentSettings] = await Promise.all([
     // Featured products for the grid
     prisma.product.findMany({
       where: { status: "PUBLISHED", isFeatured: true },
@@ -65,6 +65,11 @@ async function getHomepageData() {
     prisma.storeSetting.findUnique({ where: { key: "hero_product_ids" } }),
     // Story section images
     prisma.storeSetting.findMany({ where: { key: { in: ["story_image_1", "story_image_2"] } } }),
+    // All content settings (about + story text)
+    prisma.storeSetting.findMany({ where: { key: { in: [
+      "story_title", "story_subtitle", "story_content",
+      "about_title", "about_subtitle", "about_content", "about_image",
+    ] } }),
   ]);
 
   const mapProduct = (p: typeof featuredProducts[0]): ProductSummary => ({
@@ -122,6 +127,7 @@ async function getHomepageData() {
 
   // Extract story images from settings
   const storyMap = Object.fromEntries((storySettings || []).map((s: { key: string; value: string }) => [s.key, s.value]));
+  const contentMap = Object.fromEntries((contentSettings || []).map((s: { key: string; value: string }) => [s.key, s.value]));
   const storyImage1 = storyMap.story_image_1 || undefined;
   const storyImage2 = storyMap.story_image_2 || undefined;
 
@@ -133,11 +139,14 @@ async function getHomepageData() {
     heroImages,
     storyImage1,
     storyImage2,
+    storyTitle: contentMap.story_title,
+    storySubtitle: contentMap.story_subtitle,
+    storyContent: contentMap.story_content,
   };
 }
 
 export default async function HomePage() {
-  const { featuredProducts, newArrivals, blogPosts, categories, heroImages, storyImage1, storyImage2 } = await getHomepageData();
+  const { featuredProducts, newArrivals, blogPosts, categories, heroImages, storyImage1, storyImage2, storyTitle, storySubtitle, storyContent } = await getHomepageData();
 
   return (
     <>
@@ -153,7 +162,13 @@ export default async function HomePage() {
         viewAllHref="/shop?badge=FEATURED"
         viewAllLabel="View All Featured"
       />
-      <StorySection image1={storyImage1} image2={storyImage2} />
+      <StorySection
+        image1={storyImage1}
+        image2={storyImage2}
+        title={storyTitle}
+        subtitle={storySubtitle}
+        content={storyContent}
+      />
       {newArrivals.length > 0 && (
         <FeaturedProducts
           products={newArrivals}

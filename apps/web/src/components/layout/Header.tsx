@@ -10,6 +10,7 @@ import { cn } from "@reborn/ui";
 import { SearchModal } from "@/components/shared/SearchModal";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { CurrencySelector } from "@/components/shared/CurrencySelector";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -27,7 +28,7 @@ const navLinks = [
     label: "Collections",
     href: "/collections",
     children: [
-      { label: "Reborn Dolls", href: "/collections/reborn-dolls" },
+      { label: "UK UK Reborn Dolls", href: "/collections/reborn-dolls" },
       { label: "Silicone Dolls", href: "/collections/silicone-dolls" },
       { label: "Cuddle Babies", href: "/collections/cuddle-babies" },
       { label: "Limited Edition", href: "/collections/limited-edition" },
@@ -71,7 +72,7 @@ export function Header() {
       >
         {/* Announcement bar */}
         <div className="bg-[var(--primary)] text-[var(--primary-text)] text-center py-1.5 px-4 text-xs font-body font-semibold">
-          ✨ Free shipping on orders over £150 &middot; Carefully packaged with love
+          ✨ Free shipping on all UK orders &middot; Carefully packaged with love
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -92,7 +93,7 @@ export function Header() {
               </div>
               <div className="hidden sm:block">
                 <span className="font-heading text-xl font-bold text-[var(--fg)]">
-                  Reborn <span className="text-bloom-rose">Dolls</span>
+                  UK Reborn <span className="text-bloom-rose">Dolls</span>
                 </span>
               </div>
             </Link>
@@ -133,6 +134,9 @@ export function Header() {
 
             {/* Right icons */}
             <div className="flex items-center gap-0.5">
+              <div className="hidden sm:block mr-1">
+                <CurrencySelector />
+              </div>
               <ThemeToggle />
 
               <button onClick={() => setSearchOpen(true)} aria-label="Search" className={iconClass}>

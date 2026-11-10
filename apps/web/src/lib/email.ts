@@ -5,7 +5,7 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "Reborn Dolls <hello@ukreborndolls.co.uk>";
+const FROM_EMAIL = process.env.FROM_EMAIL || "UK UK Reborn Dolls <hello@ukreborndolls.co.uk>";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "hello@ukreborndolls.co.uk";
 
 // ─── Order notification to admin ─────────────────────────────────────────────
@@ -149,7 +149,7 @@ export async function sendOrderConfirmationToCustomer(order: {
         </div>
       </div>
       <div style="padding:20px;text-align:center;">
-        <p style="margin:0;font-size:12px;color:#5a7a8a;">© ${new Date().getFullYear()} Reborn Dolls — Where Artistry Comes to Life.</p>
+        <p style="margin:0;font-size:12px;color:#5a7a8a;">© ${new Date().getFullYear()} UK UK Reborn Dolls — Where Artistry Comes to Life.</p>
       </div>
     </div>
   `;
@@ -187,7 +187,7 @@ export async function sendPasswordResetEmail(
   await getResend().emails.send({
     from: FROM_EMAIL,
     to: email,
-    subject: "Reset your Reborn Dolls password",
+    subject: "Reset your UK UK Reborn Dolls password",
     html,
   });
 }

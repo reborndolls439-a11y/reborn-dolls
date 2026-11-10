@@ -7,24 +7,24 @@ import { VisitorTracker } from "@/components/shared/VisitorTracker";
 
 export const metadata: Metadata = {
   title: {
-    default: "Reborn Dolls | Where Artistry Comes to Life",
-    template: "%s | Reborn Dolls",
+    default: "UK UK Reborn Dolls | Where Artistry Comes to Life",
+    template: "%s | UK UK Reborn Dolls",
   },
   description:
-    "Discover exquisitely crafted reborn dolls and collectibles. Shop our curated collection of lifelike reborn babies, silicone dolls, and premium accessories.",
-  keywords: ["reborn dolls", "collectible dolls", "silicone dolls", "reborn babies", "doll accessories"],
+    "Discover exquisitely crafted UK UK Reborn Dolls and collectibles. Shop our curated collection of lifelike reborn babies, silicone dolls, and premium accessories.",
+  keywords: ["UK UK Reborn Dolls", "collectible dolls", "silicone dolls", "reborn babies", "doll accessories"],
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   openGraph: {
     type: "website",
-    siteName: "Reborn Dolls",
-    title: "Reborn Dolls | Where Artistry Comes to Life",
-    description: "Discover exquisitely crafted reborn dolls and collectibles.",
+    siteName: "UK UK Reborn Dolls",
+    title: "UK UK Reborn Dolls | Where Artistry Comes to Life",
+    description: "Discover exquisitely crafted UK UK Reborn Dolls and collectibles.",
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Reborn Dolls | Where Artistry Comes to Life",
-    description: "Discover exquisitely crafted reborn dolls and collectibles.",
+    title: "UK UK Reborn Dolls | Where Artistry Comes to Life",
+    description: "Discover exquisitely crafted UK UK Reborn Dolls and collectibles.",
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
 };

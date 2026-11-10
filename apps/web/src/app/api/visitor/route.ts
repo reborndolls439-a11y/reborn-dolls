@@ -4,7 +4,7 @@ import { Resend } from "resend";
 export const dynamic = "force-dynamic";
 
 function getResend() { return new Resend(process.env.RESEND_API_KEY); }
-const FROM_EMAIL = process.env.FROM_EMAIL || "Reborn Dolls <hello@ukreborndolls.co.uk>";
+const FROM_EMAIL = process.env.FROM_EMAIL || "UK UK Reborn Dolls <hello@ukreborndolls.co.uk>";
 // Visitor alerts go to the specified Gmail address
 const ALERT_EMAIL = "reborndolls439@gmail.com";
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       html: `
         <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;color:#02182B;">
           <div style="background:#2FE6DE;padding:16px 24px;border-radius:10px 10px 0 0;">
-            <h2 style="margin:0;font-size:16px;color:#02182B;">${flag} New Visitor — UK Reborn Dolls</h2>
+            <h2 style="margin:0;font-size:16px;color:#02182B;">${flag} New Visitor — UK UK UK Reborn Dolls</h2>
           </div>
           <div style="background:#f7fbfe;padding:20px 24px;border:1px solid #cddceb;border-top:none;border-radius:0 0 10px 10px;font-size:14px;line-height:1.9;">
             <p style="margin:0"><strong>Time (UK):</strong> ${time}</p>

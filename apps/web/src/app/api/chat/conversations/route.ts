@@ -6,7 +6,7 @@ import { Resend } from "resend";
 export const dynamic = "force-dynamic";
 
 function getResend() { return new Resend(process.env.RESEND_API_KEY); }
-const FROM_EMAIL = process.env.FROM_EMAIL || "Reborn Dolls <hello@ukreborndolls.co.uk>";
+const FROM_EMAIL = process.env.FROM_EMAIL || "UK UK Reborn Dolls <hello@ukreborndolls.co.uk>";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "hello@ukreborndolls.co.uk";
 
 export async function GET() {

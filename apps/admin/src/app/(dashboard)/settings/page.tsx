@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Save, Store, Mail, Truck, ImageIcon, X, GripVertical, CheckCircle2, Upload, Loader2 } from "lucide-react";
 import { Button, Input } from "@reborn/ui";
+import { ContentEditor } from "@/components/settings/ContentEditor";
 
 interface Settings {
   store_name: string; store_tagline: string; store_email: string;
@@ -203,6 +204,14 @@ export default function SettingsPage() {
               );
             })}
           </div>
+        </div>
+
+        {/* ── ABOUT & STORY CONTENT EDITOR ──────────────────────────────── */}
+        <div className="bg-white rounded-2xl border border-charcoal-100 p-6">
+          <ContentEditor initialData={{
+            about_title: "", about_subtitle: "", about_content: "", about_image: "",
+            story_title: "", story_subtitle: "", story_content: "", story_image: "",
+          }} />
         </div>
 
         {/* ── HERO IMAGE PICKER ───────────────────────────────────────────── */}

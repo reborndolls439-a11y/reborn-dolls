@@ -35,7 +35,7 @@ export default function RegisterPage() {
     try {
       const data = await api.post<{ user: User }>("/auth/register", { name: form.name, email: form.email, password: form.password });
       setUser(data.user);
-      toast.success("Account created!", "Welcome to Reborn Dolls.");
+      toast.success("Account created!", "Welcome to UK UK Reborn Dolls.");
       router.push("/account");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Registration failed.";
@@ -55,7 +55,7 @@ export default function RegisterPage() {
             </div>
           </Link>
           <h1 className="font-heading text-2xl font-bold text-charcoal">Create Account</h1>
-          <p className="text-sm text-taupe font-body mt-1">Join the Reborn Dolls community</p>
+          <p className="text-sm text-taupe font-body mt-1">Join the UK UK Reborn Dolls community</p>
         </div>
 
         {errors.general && (

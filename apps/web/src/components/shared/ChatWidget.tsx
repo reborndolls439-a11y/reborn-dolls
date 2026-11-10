@@ -182,7 +182,7 @@ export function ChatWidget() {
               <MessageCircle className="w-4 h-4" style={{ color: "var(--primary-text)" }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold font-body" style={{ color: "var(--primary-text)" }}>Reborn Dolls Support</p>
+              <p className="text-sm font-semibold font-body" style={{ color: "var(--primary-text)" }}>UK UK Reborn Dolls Support</p>
               <p className="text-[10px] opacity-70 font-body" style={{ color: "var(--primary-text)" }}>
                 {step === "chat" ? "Chat active" : "Typically replies within a few hours"}
               </p>

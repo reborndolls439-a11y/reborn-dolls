@@ -112,7 +112,7 @@ export default function CheckoutPage() {
             <div className="w-8 h-8 rounded-full bg-bloom-rose flex items-center justify-center">
               <span className="text-white text-xs font-bold font-heading">R</span>
             </div>
-            <span className="font-heading text-lg font-bold text-charcoal">Reborn Dolls</span>
+            <span className="font-heading text-lg font-bold text-charcoal">UK UK Reborn Dolls</span>
           </Link>
           <div className="flex items-center gap-1 text-xs font-body">
             {(["contact", "shipping", "review"] as Step[]).map((s, i) => (
