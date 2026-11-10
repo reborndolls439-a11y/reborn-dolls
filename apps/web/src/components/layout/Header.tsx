@@ -24,18 +24,6 @@ const navLinks = [
       { label: "On Sale", href: "/shop?badge=SALE" },
     ],
   },
-  {
-    label: "Collections",
-    href: "/collections",
-    children: [
-      { label: "UK UK Reborn Dolls", href: "/collections/reborn-dolls" },
-      { label: "Silicone Dolls", href: "/collections/silicone-dolls" },
-      { label: "Cuddle Babies", href: "/collections/cuddle-babies" },
-      { label: "Limited Edition", href: "/collections/limited-edition" },
-      { label: "Doll Clothing", href: "/collections/doll-clothing" },
-      { label: "Accessories", href: "/collections/accessories" },
-    ],
-  },
   { label: "New Arrivals", href: "/new-arrivals" },
   { label: "Blog", href: "/blog" },
   { label: "About", href: "/about" },
@@ -51,6 +39,18 @@ export function Header() {
   const itemCount = useCartItemCount();
   const { items: wishlistItems } = useWishlistStore();
   const { user } = useAuthStore();
+  const [shipThreshold, setShipThreshold] = useState<number | null>(null);
+
+  // Fetch free shipping threshold from store settings
+  useEffect(() => {
+    fetch("/api/settings/public")
+      .then((r) => r.json())
+      .then((d) => {
+        const val = d.settings?.free_shipping_threshold ?? d.free_shipping_threshold;
+        if (val) setShipThreshold(parseFloat(val));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -72,7 +72,7 @@ export function Header() {
       >
         {/* Announcement bar */}
         <div className="bg-[var(--primary)] text-[var(--primary-text)] text-center py-1.5 px-4 text-xs font-body font-semibold">
-          ✨ Free shipping on all UK orders &middot; Carefully packaged with love
+          ✨ Free shipping on orders over {shipThreshold ? `£${shipThreshold}` : "£150"} &middot; Carefully packaged with love
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
