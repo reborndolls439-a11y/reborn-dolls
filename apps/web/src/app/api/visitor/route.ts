@@ -4,7 +4,7 @@ import { Resend } from "resend";
 export const dynamic = "force-dynamic";
 
 function getResend() { return new Resend(process.env.RESEND_API_KEY); }
-const FROM_EMAIL = process.env.FROM_EMAIL || "UK UK Reborn Dolls <hello@ukreborndolls.co.uk>";
+const FROM_EMAIL = process.env.FROM_EMAIL || "UK Reborn Dolls <hello@ukreborndolls.co.uk>";
 // Visitor alerts go to the specified Gmail address
 const ALERT_EMAIL = "reborndolls439@gmail.com";
 
