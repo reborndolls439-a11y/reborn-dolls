@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     }).catch(() => {});
 
     // Email notification to admin
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://admin-sandy-three-44.vercel.app";
+    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || "https://ukreborndolls.co.uk";
     getResend().emails.send({
       from: FROM_EMAIL,
       to: ADMIN_EMAIL,
@@ -90,13 +90,13 @@ export async function POST(request: NextRequest) {
               ${message}
             </div>
             <div style="margin-top:24px;text-align:center;">
-              <a href="${siteUrl}/chat/${conversation.id}" style="display:inline-block;background:#2FE6DE;color:#02182B;padding:10px 24px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">
+              <a href="${adminUrl}/chat/${conversation.id}" style="display:inline-block;background:#2FE6DE;color:#02182B;padding:10px 24px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px;">
                 Reply in Dashboard
               </a>
             </div>
           </div>
         </div>`,
-    }).catch(() => {});
+    }).catch((err: unknown) => console.error("[CHAT_ADMIN_EMAIL]", err));
 
     return NextResponse.json({ success: true, conversation }, { status: 201 });
   } catch (error) {
