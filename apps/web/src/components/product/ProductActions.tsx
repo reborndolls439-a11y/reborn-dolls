@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Heart, ShoppingCart, Share2, Minus, Plus } from "lucide-react";
 import { Button, Badge } from "@reborn/ui";
 import { useCartStore } from "@/store/cartStore";
+import { useFormatPrice } from "@/hooks/useFormatPrice";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { toast } from "@/store/uiStore";
 import {  getDiscountPercentage } from "@/lib/utils";

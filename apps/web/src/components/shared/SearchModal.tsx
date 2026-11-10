@@ -19,6 +19,7 @@ interface SearchModalProps {
 }
 const RECENT_KEY = "reborn_recent_searches";
 export function SearchModal({ open, onClose }: SearchModalProps) {
+  const { formatPrice } = useFormatPrice();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
