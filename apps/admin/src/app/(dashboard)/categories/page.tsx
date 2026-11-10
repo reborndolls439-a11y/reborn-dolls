@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Save, X, Upload, Image as ImageIcon, Loader2, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Save, X, Upload, Image as ImageIcon, Loader2, AlertCircle, Trash2 } from "lucide-react";
 import { Button, Input } from "@reborn/ui";
 
 interface Category {
@@ -23,6 +23,8 @@ export default function CategoriesPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => {
@@ -124,6 +126,16 @@ export default function CategoriesPage() {
     setAdding(false);
     setForm({ name: "", description: "", slug: "", image: "" });
     setUploadError("");
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
+      setConfirmDeleteId(null);
+      load();
+    } catch { /* ignore */ }
+    finally { setDeletingId(null); }
   };
 
   return (
@@ -290,7 +302,7 @@ export default function CategoriesPage() {
                   {cat._count ? ` · ${cat._count.products} products` : ""}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => startEdit(cat)}
                   className="w-8 h-8 rounded-lg border border-charcoal-200 flex items-center justify-center text-taupe hover:text-bloom-rose hover:border-bloom-rose transition-colors"
@@ -298,6 +310,35 @@ export default function CategoriesPage() {
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
+
+                {confirmDeleteId === cat.id ? (
+                  /* Inline confirmation */
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-red-600 font-body whitespace-nowrap">Delete?</span>
+                    <button
+                      onClick={() => handleDelete(cat.id)}
+                      disabled={deletingId === cat.id}
+                      className="h-7 px-2 rounded-lg bg-red-500 text-white text-xs font-semibold font-body hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {deletingId === cat.id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                      Yes
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="h-7 px-2 rounded-lg border border-charcoal-200 text-xs text-taupe font-body hover:border-charcoal-400 transition-colors"
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteId(cat.id)}
+                    className="w-8 h-8 rounded-lg border border-charcoal-200 flex items-center justify-center text-taupe hover:text-red-500 hover:border-red-300 transition-colors"
+                    aria-label="Delete category"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           ))}
