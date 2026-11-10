@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 async function getHomepageData() {
-  const [featuredProducts, newArrivals, blogPosts, categories, heroProducts] = await Promise.all([
+  const [featuredProducts, newArrivals, blogPosts, categories, heroSetting] = await Promise.all([
     // Featured products for the grid
     prisma.product.findMany({
       where: { status: "PUBLISHED", isFeatured: true },
@@ -61,16 +61,8 @@ async function getHomepageData() {
       orderBy: { sortOrder: "asc" },
       select: { name: true, slug: true, image: true, description: true },
     }),
-    // 4 published products with images for the hero grid
-    prisma.product.findMany({
-      where: { status: "PUBLISHED" },
-      take: 4,
-      orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
-      select: {
-        name: true,
-        images: { where: { isPrimary: true }, select: { url: true }, take: 1 },
-      },
-    }),
+    // Admin-selected hero product IDs from store settings
+    prisma.storeSetting.findUnique({ where: { key: "hero_product_ids" } }),
   ]);
 
   const mapProduct = (p: typeof featuredProducts[0]): ProductSummary => ({
@@ -81,10 +73,50 @@ async function getHomepageData() {
     category: p.category,
   });
 
-  // Build hero images from real products (only include those with an image)
-  const heroImages = heroProducts
-    .filter((p) => p.images[0]?.url)
-    .map((p) => ({ url: p.images[0].url, alt: p.name }));
+  // Try to load admin-selected hero products first
+  let heroImages: { url: string; alt: string }[] = [];
+
+  if (heroSetting?.value) {
+    try {
+      const heroIds: string[] = JSON.parse(heroSetting.value);
+      if (heroIds.length > 0) {
+        const heroProducts = await prisma.product.findMany({
+          where: { id: { in: heroIds }, status: "PUBLISHED" },
+          select: {
+            id: true, name: true,
+            images: { where: { isPrimary: true }, select: { url: true }, take: 1 },
+          },
+        });
+        // Preserve the admin-defined order
+        heroImages = heroIds
+          .map((id) => heroProducts.find((p) => p.id === id))
+          .filter((p): p is NonNullable<typeof p> => !!p && !!p.images[0]?.url)
+          .map((p) => ({ url: p.images[0].url, alt: p.name }));
+      }
+    } catch { /* fall through to auto-select */ }
+  }
+
+  // Auto-select from featured products if admin hasn't picked any (or not enough)
+  if (heroImages.length < 4) {
+    const autoProducts = await prisma.product.findMany({
+      where: { status: "PUBLISHED" },
+      take: 4,
+      orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
+      select: {
+        name: true,
+        images: { where: { isPrimary: true }, select: { url: true }, take: 1 },
+      },
+    });
+    const autoImages = autoProducts
+      .filter((p) => p.images[0]?.url)
+      .map((p) => ({ url: p.images[0].url, alt: p.name }));
+    // Merge: keep admin picks, fill remaining slots from auto-select
+    const existingUrls = new Set(heroImages.map((i) => i.url));
+    for (const img of autoImages) {
+      if (heroImages.length >= 4) break;
+      if (!existingUrls.has(img.url)) heroImages.push(img);
+    }
+  }
 
   return {
     featuredProducts: featuredProducts.map(mapProduct),

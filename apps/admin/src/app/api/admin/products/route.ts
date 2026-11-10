@@ -2,8 +2,43 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/auth";
 import { prisma } from "@reborn/db";
 
+export const dynamic = "force-dynamic";
+
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const admin = await getCurrentAdmin();
+    if (!admin) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+
+    const { searchParams } = request.nextUrl;
+    const limit = Math.min(100, parseInt(searchParams.get("limit") || "50"));
+    const status = searchParams.get("status") || undefined;
+
+    const products = await prisma.product.findMany({
+      where: status ? { status: status as "PUBLISHED" | "DRAFT" | "ARCHIVED" } : {},
+      orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+      take: limit,
+      select: {
+        id: true, name: true, status: true,
+        images: { where: { isPrimary: true }, select: { url: true }, take: 1 },
+      },
+    });
+
+    return NextResponse.json({
+      products: products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        status: p.status,
+        images: p.images,
+      })),
+    });
+  } catch (e) {
+    console.error("[PRODUCTS_GET]", e);
+    return NextResponse.json({ error: "Failed." }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
