@@ -69,7 +69,7 @@ async function getHomepageData() {
     prisma.storeSetting.findMany({ where: { key: { in: [
       "story_title", "story_subtitle", "story_content",
       "about_title", "about_subtitle", "about_content", "about_image",
-    ] } }),
+    ] } }})
   ]);
 
   const mapProduct = (p: typeof featuredProducts[0]): ProductSummary => ({
