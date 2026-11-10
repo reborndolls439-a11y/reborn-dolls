@@ -126,6 +126,7 @@
   .dark .bg-ivory   { background-color: var(--bg); }
   .dark .bg-white   { background-color: var(--bg-card); }
   .dark .text-charcoal { color: var(--fg); }
+  .dark .text-charcoal-800 { color: var(--fg); }
   .dark .text-taupe { color: var(--fg-muted); }
   .dark .border-charcoal-100 { border-color: var(--border); }
   .dark .border-charcoal-50  { border-color: var(--border); }
@@ -135,4 +136,17 @@
   .dark .bg-soft-blush-50  { background-color: rgba(47, 230, 222, 0.05); }
   .dark .bg-soft-blush-100 { background-color: rgba(47, 230, 222, 0.08); }
   .dark .divide-charcoal-50 > * + * { border-color: var(--border); }
+
+  /* Input / Textarea / Select fields in dark mode */
+  .dark input:not([type="checkbox"]):not([type="radio"]),
+  .dark textarea,
+  .dark select {
+    background-color: var(--bg-subtle);
+    color: var(--fg);
+    border-color: var(--border);
+  }
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: var(--fg-subtle);
+  }
 }
