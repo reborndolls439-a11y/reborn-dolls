@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useTransition, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { Drawer, Pagination } from "@reborn/ui";
@@ -22,33 +22,24 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
 
   const [products, setProducts] = useState(initialProducts);
   const [meta, setMeta] = useState(initialMeta);
   const [loading, setLoading] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Always read filter state from the URL — this is the single source of truth.
-  // When the user navigates back, the URL still has the filters so state persists.
-  const getFiltersFromUrl = useCallback(() => ({
-    category: searchParams.get("category") || "",
-    badge: searchParams.get("badge") || "",
-    minPrice: searchParams.get("minPrice") || "",
-    maxPrice: searchParams.get("maxPrice") || "",
-    inStock: searchParams.get("inStock") === "true",
-    sort: searchParams.get("sort") || "newest",
-  }), [searchParams]);
+  // Read filters from URL on mount
+  const [filters, setFilters] = useState({
+    category: initialFilters.category || searchParams.get("category") || "",
+    badge: initialFilters.badge || searchParams.get("badge") || "",
+    minPrice: initialFilters.minPrice || searchParams.get("minPrice") || "",
+    maxPrice: initialFilters.maxPrice || searchParams.get("maxPrice") || "",
+    inStock: (initialFilters.inStock || searchParams.get("inStock")) === "true",
+    sort: initialFilters.sort || searchParams.get("sort") || "newest",
+  });
+  const [page, setPage] = useState(Number(initialFilters.page || searchParams.get("page")) || 1);
 
-  const [filters, setFilters] = useState(getFiltersFromUrl);
-  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
-
-  // Sync filter state when URL changes (e.g. back button)
-  useEffect(() => {
-    setFilters(getFiltersFromUrl());
-    setPage(Number(searchParams.get("page")) || 1);
-  }, [searchParams, getFiltersFromUrl]);
-
+  // Fetch products directly — called on every filter change
   const fetchProducts = useCallback(async (f: typeof filters, p: number) => {
     setLoading(true);
     try {
@@ -68,41 +59,44 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
     finally { setLoading(false); }
   }, []);
 
-  // Whenever URL params change, fetch new products
-  useEffect(() => {
-    fetchProducts(getFiltersFromUrl(), Number(searchParams.get("page")) || 1);
-  }, [searchParams]); // eslint-disable-line
-
-  // Push a filter change to the URL — the effect above will then fetch
+  // Apply a filter: update state, fetch products, and sync URL — all immediately
   const applyFilter = useCallback((key: keyof typeof filters, value: string | boolean) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    setPage(1);
+
+    // Fetch new products immediately
+    fetchProducts(newFilters, 1);
+
+    // Update URL (non-blocking)
     const params = new URLSearchParams(searchParams.toString());
     if (value === "" || value === false) {
       params.delete(key);
     } else {
       params.set(key, String(value));
     }
-    // Reset to page 1 on filter change (except sort)
     if (key !== "sort") params.delete("page");
-    startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    });
-  }, [searchParams, pathname, router]);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [filters, searchParams, pathname, router, fetchProducts]);
 
   const handleClearAll = useCallback(() => {
-    startTransition(() => {
-      router.push(pathname, { scroll: false });
-    });
-  }, [pathname, router]);
+    const cleared = { category: "", badge: "", minPrice: "", maxPrice: "", inStock: false, sort: "newest" };
+    setFilters(cleared);
+    setPage(1);
+    fetchProducts(cleared, 1);
+    router.replace(pathname, { scroll: false });
+  }, [pathname, router, fetchProducts]);
 
   const handlePageChange = useCallback((p: number) => {
+    setPage(p);
+    fetchProducts(filters, p);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     const params = new URLSearchParams(searchParams.toString());
     if (p === 1) params.delete("page");
     else params.set("page", String(p));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    });
-  }, [searchParams, pathname, router]);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [filters, searchParams, pathname, router, fetchProducts]);
 
   const activeFilterCount = [filters.category, filters.badge, filters.minPrice, filters.maxPrice, filters.inStock].filter(Boolean).length;
 
@@ -114,13 +108,11 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
           {loading ? "Loading…" : `${meta.total} product${meta.total !== 1 ? "s" : ""}`}
         </p>
         <div className="flex items-center gap-3">
-          {/* Active filter chips on mobile */}
           {filters.category && (
             <span className="hidden sm:flex items-center gap-1 text-xs bg-bloom-rose-50 text-bloom-rose border border-bloom-rose-200 px-2.5 py-1 rounded-full font-body">
               {categories.find(c => c.slug === filters.category)?.name || filters.category}
             </span>
           )}
-          {/* Mobile filter button */}
           <button
             onClick={() => setMobileFiltersOpen(true)}
             className="lg:hidden flex items-center gap-2 h-9 px-4 rounded-full border border-charcoal-200 text-sm font-medium font-body hover:border-bloom-rose hover:text-bloom-rose transition-colors"
@@ -137,7 +129,6 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
       </div>
 
       <div className="flex gap-8">
-        {/* Desktop sidebar */}
         <aside className="hidden lg:block w-56 shrink-0">
           <FilterPanel
             filters={filters}
@@ -147,7 +138,6 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
           />
         </aside>
 
-        {/* Product grid */}
         <div className="flex-1 min-w-0">
           <ProductGrid products={products} loading={loading} />
           {!loading && meta.totalPages > 1 && (
@@ -162,7 +152,6 @@ export function ShopClient({ initialProducts, initialMeta, categories, initialFi
         </div>
       </div>
 
-      {/* Mobile filter drawer */}
       <Drawer open={mobileFiltersOpen} onClose={() => setMobileFiltersOpen(false)} title="Filters" side="left">
         <div className="p-4">
           <FilterPanel
