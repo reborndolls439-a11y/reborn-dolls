@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60; // Extend Vercel timeout to 60s (requires Pro for >10s)
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,11 +19,14 @@ export async function POST(request: NextRequest) {
       "Accept-Language": "en-US,en;q=0.9",
     };
 
-    // ─── Strategy 1: Stream-parse (fast, low-memory, stops early) ────────────
-    // Reads the response body chunk by chunk, extracts JSON-LD as it arrives.
-    // For sites like reborns.com this avoids loading the full 548KB.
-    let products = await streamScrape(url, HEADERS);
+    // ─── Strategy 0: Shopify API (most accurate) ──────────────────────────────
+    // Shopify stores expose /products.json — gives individual title, price,
+    // description and images per product. Far more reliable than HTML scraping.
+    let products = await scrapeShopify(url, HEADERS);
     let usedBrowserless = false;
+
+    // ─── Strategy 1: Stream-parse (fast, low-memory) ─────────────────────────
+    if (products.length === 0) products = await streamScrape(url, HEADERS);
 
     // ─── Strategy 2: Full HTML fetch + parse ─────────────────────────────────
     if (products.length === 0) {
@@ -79,6 +82,82 @@ export async function POST(request: NextRequest) {
     console.error("[SCRAPER]", error);
     return NextResponse.json({ error: "Scraping failed. Please try again." }, { status: 500 });
   }
+}
+
+// ─── SHOPIFY API SCRAPER ──────────────────────────────────────────────────────
+// Detects Shopify stores by probing /products.json. If found, paginates through
+// all products (250 per page) up to the 100-product limit.
+async function scrapeShopify(url: string, headers: Record<string, string>): Promise<Product[]> {
+  try {
+    const { origin, pathname } = new URL(url);
+
+    // Derive collection handle from URL if present (e.g. /collections/baby-dolls)
+    const collectionMatch = pathname.match(/\/collections\/([^/?#]+)/);
+    const collectionHandle = collectionMatch?.[1];
+
+    // Build the products.json endpoint — collection-scoped if possible
+    const apiBase = collectionHandle
+      ? `${origin}/collections/${collectionHandle}/products.json`
+      : `${origin}/products.json`;
+
+    const products: Product[] = [];
+    let page = 1;
+
+    while (products.length < 100) {
+      const res = await fetch(`${apiBase}?limit=250&page=${page}`, {
+        headers: { ...headers, Accept: "application/json" },
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (!res.ok) return []; // Not a Shopify store or endpoint not available
+
+      const data = await res.json() as { products?: ShopifyProduct[] };
+      const batch = data.products;
+      if (!batch || batch.length === 0) break;
+
+      for (const p of batch) {
+        if (products.length >= 100) break;
+
+        // Strip HTML from body_html
+        const description = p.body_html
+          ? p.body_html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 500)
+          : "";
+
+        // Price: use the lowest variant price
+        const price = p.variants?.length
+          ? `£${parseFloat(p.variants.reduce((min, v) => parseFloat(v.price) < parseFloat(min.price) ? v : min).price).toFixed(2)}`
+          : "";
+
+        // Images: all image srcs, up to 5
+        const images = (p.images || []).slice(0, 5).map((img) => img.src);
+
+        products.push({
+          title: p.title,
+          description,
+          price,
+          images,
+          sourceUrl: `${origin}/products/${p.handle}`,
+          selected: true,
+        });
+      }
+
+      if (batch.length < 250) break; // Last page
+      page++;
+    }
+
+    return products;
+  } catch {
+    return []; // Not Shopify — fall through to other strategies
+  }
+}
+
+interface ShopifyProduct {
+  id: number;
+  title: string;
+  handle: string;
+  body_html: string;
+  variants: { price: string }[];
+  images: { src: string }[];
 }
 
 // ─── STREAM SCRAPER ──────────────────────────────────────────────────────────
