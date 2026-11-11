@@ -101,7 +101,7 @@ async function streamScrape(url: string, headers: Record<string, string>) {
     let buffer = "";
     const MAX_BUFFER = 600_000; // Stop after 600KB regardless
 
-    while (products.length < 20 && buffer.length < MAX_BUFFER) {
+    while (products.length < 100 && buffer.length < MAX_BUFFER) {
       const { done, value } = await reader.read();
       if (done) break;
 
@@ -115,8 +115,8 @@ async function streamScrape(url: string, headers: Record<string, string>) {
         }
       }
 
-      // If we found products in the first 100KB, we can stop early
-      if (products.length > 0 && buffer.length > 100_000) break;
+      // Stop early only after 300KB if we already have products
+      if (products.length > 0 && buffer.length > 300_000) break;
     }
 
     // Cleanup: cancel the stream if we stopped early
@@ -259,7 +259,7 @@ function parseProductsFromHtml(html: string, sourceUrl: string): Product[] {
     const finalImages = itemImages.length > 0 ? itemImages.slice(0, 5) : relatedImages.length > 0 ? relatedImages.slice(0, 5) : allImages.slice(0, 3);
 
     products.push({ title, description: `A beautifully crafted collectible — ${title}.`, price: prices[0] || "", images: finalImages, sourceUrl: item.url, selected: true });
-    if (products.length >= 20) break;
+    if (products.length >= 100) break;
   }
 
   return products;
