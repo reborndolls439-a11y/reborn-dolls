@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     // Email notification to admin
     const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || "https://ukreborndolls.co.uk";
-    getResend().emails.send({
+    const emailResult = await getResend().emails.send({
       from: FROM_EMAIL,
       to: ADMIN_EMAIL,
       subject: `💬 New Live Chat — ${customerName}`,
@@ -96,7 +96,12 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         </div>`,
-    }).catch((err: unknown) => console.error("[CHAT_ADMIN_EMAIL]", err));
+    }).catch((err: unknown) => { console.error("[CHAT_ADMIN_EMAIL] Send threw:", err); return null; });
+    if (emailResult?.error) {
+      console.error("[CHAT_ADMIN_EMAIL] Resend rejected:", JSON.stringify(emailResult.error));
+    } else {
+      console.log("[CHAT_ADMIN_EMAIL] Sent OK, id:", emailResult?.data?.id);
+    }
 
     return NextResponse.json({ success: true, conversation }, { status: 201 });
   } catch (error) {
